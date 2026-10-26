@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es-MX"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101829"><meta name="description" content="Control privado de tarjetas, compras, MSI, gastos y préstamos"><title>Brújula · Mis finanzas</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="styles.css"><script src="config.js"></script><script src="app.js" type="module"></script></head>
+<body>
+<div id="gate" class="gate"><div class="signin panel">
+  <div class="brand brand-big"><span class="brand-logo">◈</span><span>brújula<span class="brand-dot">.</span><small>FINANZAS PERSONALES</small></span></div>
+  <h1>Tu dinero, <em>en orden.</em></h1><p class="muted">Tarjetas, meses sin intereses, efectivo y créditos, todos en un mismo lugar.</p>
+  <form id="auth-form" class="stack"><label>Correo electrónico<input type="email" id="auth-email" autocomplete="username" required placeholder="tu@correo.com"></label><label>Contraseña<input id="auth-pass" type="password" minlength="6" autocomplete="current-password" required placeholder="Mínimo 6 caracteres"></label><div class="auth-buttons"><button class="btn primary" type="submit" id="signin">Ingresar</button><button class="btn soft" type="button" id="signup">Crear mi acceso</button></div></form>
+  <p class="login-note" id="auth-notice"></p><div class="demo-border"><p class="muted small">¿Quieres conocer la plataforma antes de configurarla?</p><button class="btn outline full" id="demo" type="button">Explorar demo con datos ficticios →</button><p class="micro">El demo no guarda información.</p></div>
+</div></div>
+<div id="shell" class="shell hidden">
+<aside class="sidebar">
+ <div class="brand"><span class="brand-logo">◈</span><span>brújula<span class="brand-dot">.</span><small>MIS FINANZAS</small></span></div>
+ <div class="nav-label">GENERAL</div>
+ <nav id="nav"><button class="nav active" data-page="dashboard"><span>◫</span> Resumen</button><button class="nav" data-page="accounts"><span>▤</span> Mis cuentas y tarjetas</button><button class="nav" data-page="movements"><span>⇄</span> Movimientos</button><button class="nav" data-page="installments"><span>▦</span> Compras a meses</button><button class="nav" data-page="statements"><span>◎</span> Cortes y conciliación</button><button class="nav" data-page="loans"><span>♧</span> Créditos</button><button class="nav" data-page="analytics"><span>◷</span> Análisis de gastos</button></nav>
+ <div class="aside-footer"><span class="dot"></span><span id="session-label">Modo demo</span><button id="logout" title="Salir">Salir ↗</button></div>
+</aside>
+<div class="workspace"><header class="topbar"><div class="mobile-brand">◈ brújula<span>.</span></div><div class="breadcrumb">Mi espacio <span>/</span> <b id="crumb">Resumen</b></div><div class="top-actions"><span class="safe-chip">🔒 Acceso privado</span><button class="btn outline small-btn" id="sync-now" type="button" title="Actualizar desde la nube">⟳</button><button class="btn primary small-btn" id="quick-add">+ Registrar movimiento</button></div></header>
+<main class="content" id="content"></main><footer class="app-footer">Brújula v1.3 · Tus registros son privados por usuario · MXN</footer></div>
+<nav class="bottom-nav" id="mobile-nav"><button data-page="dashboard" class="active">◫<small>Inicio</small></button><button data-page="accounts">▤<small>Tarjetas</small></button><button data-page="movements">⇄<small>Registro</small></button><button data-page="installments">▦<small>MSI</small></button><button data-page="loans">♧<small>Créditos</small></button></nav>
+</div>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="dialog"><header><h2 id="modal-title"></h2><button class="icon-btn" id="close-modal" title="Cerrar" aria-label="Cerrar">✕</button></header><form id="modal-form" class="dialog-form"></form></div></div>
+<div id="toast" class="toast hidden" role="status"></div>
+</body></html>
