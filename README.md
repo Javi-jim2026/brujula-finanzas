@@ -6,7 +6,7 @@ Aplicación personal de control de tarjetas, meses sin intereses, movimientos, e
 - Código de la PWA incorporado a este repositorio privado (rama `main`).
 - Proyecto de Supabase separado: `brujula-finanzas` (ref: `krilcvtobjzffffleebb`).
 - Base de datos creada con seis tablas y reglas de seguridad a nivel fila (RLS).
-- **Aún no publicada**: es necesario elegir hosting HTTPS y verificar el inicio de sesión de Supabase antes de registrar datos reales.
+- **Aún no publicada**: existe un flujo automático en `.github/workflows/pages.yml`, pero es necesario hacer públicos los archivos de código y activar GitHub Pages en la configuración antes de usar datos reales.
 - Nunca introducir contraseñas bancarias, número completo de tarjeta, NIP ni CVV.
 
 ## Archivos
@@ -18,7 +18,7 @@ Aplicación personal de control de tarjetas, meses sin intereses, movimientos, e
 ## Publicación
 Una cuenta GitHub Free solo permite GitHub Pages desde repositorios **públicos**. Para conservar este repositorio **privado**, usar GitHub Pro/Team o un hosting estático externo compatible con repositorios privados. En ambos casos, el sitio web de inicio de sesión puede ser público; la privacidad de los datos depende de Supabase Auth + RLS.
 
-Si GitHub Pages está habilitado, en `Settings > Pages > Build and deployment` seleccionar `Deploy from a branch`, `main` y `/(root)`.
+Se incorporó el flujo de GitHub Actions `.github/workflows/pages.yml`, que publica **solo** HTML, CSS, JS, manifiesto e iconos (no publica SQL ni documentación). Para habilitarlo por primera vez con GitHub Free: 1) `Settings > General > Danger Zone > Change repository visibility > Public`; 2) `Settings > Pages > Build and deployment > Source > GitHub Actions`; 3) abrir `Actions > Publicar Brújula Finanzas > Run workflow` (rama `main`). El sitio esperado, una vez confirmado el despliegue, es `https://javi-jim2026.github.io/brujula-finanzas/`. No compartir ni dar por activo ese enlace hasta verificar el despliegue. **No registrar datos bancarios reales antes de probar autenticación y aislamiento**.
 
 ## Validación previa a uso real
 1. Publicar bajo HTTPS.
