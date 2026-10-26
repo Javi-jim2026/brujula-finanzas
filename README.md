@@ -28,3 +28,9 @@ Se incorporó el flujo de GitHub Actions `.github/workflows/pages.yml`, que publ
 5. Comparar cálculo estimado con **pago para no generar intereses** oficial del banco; este último manda.
 
 No hay datos bancarios reales en este repositorio. La aplicación requiere internet para consultar y guardar información.
+
+## Comprobación de publicación
+- Repositorio público configurado por el propietario el 26 de octubre de 2026.
+- Flujo de publicación: `.github/workflows/pages.yml`.
+- URL esperada tras completarse el despliegue: https://javi-jim2026.github.io/brujula-finanzas/
+- **No se deben ingresar datos reales hasta verificar que autenticación, acceso y cálculos funcionan.**
