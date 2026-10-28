@@ -24,10 +24,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
+      - name: Verificar JavaScript y reglas financieras
+        run: |
+          node --check app.js
+          node --check finance-rules.mjs
+          node --test tests/finance-rules.test.mjs
       - name: Preparar únicamente archivos públicos de la aplicación
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
+          cp index.html styles.css app.js finance-rules.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
       - name: Empaquetar sitio
         uses: actions/upload-pages-artifact@v3
         with:
