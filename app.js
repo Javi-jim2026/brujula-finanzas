@@ -125,6 +125,124 @@ const optsAccounts=(filter)=>state.accounts.filter(a=>!filter||a.kind===filter).
 function bodyButtons(){return `<div class="form-footer"><button type="button" class="btn outline" data-act="close">Cancelar</button><button type="submit" class="btn primary">Guardar registro</button></div>`}
 function modalOpen(title,table,html,id=null){$('#modal-title').textContent=title;const f=$('#modal-form');f.dataset.table=table;f.dataset.id=id||'';f.innerHTML=`<div class="form-grid">${html}</div>${bodyButtons()}`;$('#modal').classList.remove('hidden');setTimeout(()=>f.querySelector('input,select,textarea')?.focus(),20)}
 const modalClose=()=>{$('#modal').classList.add('hidden');$('#modal-form').reset()};
+
+/* Asistente de alta: tres pasos y una sola transacción Supabase.
+   Las tarjetas previas siguen legacy hasta que el propietario fije voluntariamente su fecha. */
+function openCreditWizard(id=null){
+ const a=id?account(id):null, existing=!!a;
+ const defaultMode=a?.opening_balance_mode||(existing?'legacy':'statement');
+ const optionModes=existing
+  ?[['legacy','Conservar configuración anterior (sin fecha)'],['statement','Desde último estado de cuenta'],['current','Desde el saldo actual del banco']]
+  :[['statement','Desde último estado de cuenta'],['current','Desde el saldo actual del banco']];
+ const latest=a?latestStatement(a.id):null;
+ const intro='<div class="wizard-heading"><strong>Asistente para tarjeta de crédito</strong><span id="wizard-label">Paso 1 de 3 · Tarjeta</span></div>'
+ +'<p class="tip">No borra movimientos ni mensualidades existentes. El saldo inicial es deuda TOTAL, incluidos saldos MSI anteriores.</p>';
+ const p1='<section class="wizard-step" data-wizard-step="0"><h3>1 · Identifica la tarjeta</h3>'
+ +field('name','Nombre de tu tarjeta','text',a?.name||'','required maxlength="100"',true)
+ +field('bank_name','Banco','text',a?.bank_name||'')
+ +field('last4','Últimos cuatro dígitos (opcional)','text',a?.last4||'','maxlength="4" pattern="[0-9]{4}"')
+ +field('credit_limit','Límite de crédito','number',a?.credit_limit??'','min="0" step="0.01" required')
+ +field('cutoff_day','Día estimado de corte (1–28)','number',a?.cutoff_day??'','min="1" max="28"')
+ +field('due_day','Día estimado de pago (1–28)','number',a?.due_day??'','min="1" max="28"')
+ +field('cutoff_tolerance_days','Margen de corte (0–3 días)','number',a?.cutoff_tolerance_days??2,'min="0" max="3" required')
+ +field('payment_alert_days','Avisar antes del pago (1–7 días)','number',a?.payment_alert_days??2,'min="1" max="7" required')
+ +'</section>';
+ const p2='<section class="wizard-step hidden" data-wizard-step="1"><h3>2 · Establece el punto de partida</h3>'
+ +choose('opening_balance_mode','¿Desde cuándo iniciarás el control?',optionModes,defaultMode,true)
+ +field('opening_balance_date','Fecha del saldo inicial (último corte o saldo actual)','date',a?.opening_balance_date||dateToday(),'required',true)
+ +field('opening_balance','Deuda TOTAL en esa fecha (incluye MSI anteriores)','number',a?.opening_balance??'','min="0" step="0.01" required',true)
+ +'<div class="notice warn full-span">⚠️ Solo registra movimientos POSTERIORES a esta fecha. No vuelvas a cargar compras ya incluidas en la deuda inicial. Los planes MSI históricos se registran solo para controlar sus mensualidades.</div>'
+ +(existing?'<p class="tip full-span">Tarjeta ya registrada: los datos y movimientos existentes se conservan. Si cambias la fecha y hay movimientos anteriores, el sistema impedirá guardar para evitar duplicaciones.</p>':'')
+ +'</section>';
+ const p3='<section class="wizard-step hidden" data-wizard-step="2"><h3>3 · Corte y pagos pendientes</h3>'
+ +(latest?'<div class="notice full-span">Esta tarjeta ya tiene un estado de cuenta del '+printDate(latest.close_date)+'. Se conservará sin cambios. Si necesitas corregirlo, usa “Cortes y conciliación”.</div>':'')
+ +'<label class="wizard-check full-span"><input type="checkbox" name="include_initial_statement" '+(existing?'':'checked')+'> Registrar también un estado de cuenta (recomendado)</label>'
+ +'<fieldset class="wizard-statement full-span"><div class="wizard-statement-grid">'
+ +field('stmt_close_date','Fecha de corte bancario','date',existing?'':a?.opening_balance_date||dateToday())
+ +field('stmt_due_date','Fecha límite oficial de pago','date','')
+ +field('stmt_no_interest_amount','Pago para no generar intereses mostrado por el banco','number','','min="0" step="0.01"')
+ +field('stmt_paid_before','Pagos anteriores a la fecha inicial (si el importe bancario era original)','number',0,'min="0" step="0.01"')
+ +field('stmt_available','Crédito disponible en la fecha inicial (opcional)','number','','min="0" step="0.01"')
+ +'</div><p class="tip">Si el banco ya indica lo que RESTA por pagar, deja los pagos previos en $0. Estos pagos previos NO son movimientos nuevos. El disponible debe corresponder a la fecha inicial indicada en el paso 2.</p></fieldset>'
+ +'<p class="tip full-span">Si no tienes tu último corte, desmarca la opción. Luego podrás capturarlo sin inventar montos. Ningún importe de MSI se suma dos veces.</p>'
+ +'</section>';
+ const controls='<div class="wizard-controls full-span"><button type="button" class="btn outline" data-act="wizard-prev" id="wizard-prev" disabled>← Atrás</button>'
+ +'<button type="button" class="btn primary" data-act="wizard-next" id="wizard-next">Siguiente →</button>'
+ +'<button type="submit" class="btn primary hidden" id="wizard-save">Guardar tarjeta</button></div>';
+ modalOpen(existing?'Configurar tarjeta y saldo inicial':'Nueva tarjeta guiada','credit_wizard',intro+p1+p2+p3+controls,id);
+ const form=$('#modal-form');
+ form.dataset.step='0';
+ form.querySelector('.form-footer').classList.add('hidden');
+ wizardUpdate();
+}
+function wizardUpdate(){
+ const form=$('#modal-form');if(form.dataset.table!=='credit_wizard')return;
+ const step=Number(form.dataset.step||0);
+ form.querySelectorAll('.wizard-step').forEach((el,n)=>el.classList.toggle('hidden',n!==step));
+ form.querySelector('#wizard-prev').disabled=step===0;
+ form.querySelector('#wizard-next').classList.toggle('hidden',step===2);
+ form.querySelector('#wizard-save').classList.toggle('hidden',step!==2);
+ const mode=form.elements.opening_balance_mode.value;
+ form.elements.opening_balance_date.disabled=mode==='legacy';
+ form.elements.opening_balance_date.required=mode!=='legacy';
+ form.querySelector('#wizard-label').textContent=['Paso 1 de 3 · Tarjeta','Paso 2 de 3 · Saldo inicial','Paso 3 de 3 · Corte bancario'][step];
+ const include=form.elements.include_initial_statement.checked;
+ const fieldset=form.querySelector('.wizard-statement');fieldset.disabled=!include;
+ fieldset.classList.toggle('hidden',!include);
+ for(const key of ['stmt_close_date','stmt_due_date','stmt_no_interest_amount']) form.elements[key].required=include;
+}
+function wizardGo(delta){
+ const f=$('#modal-form');const step=Number(f.dataset.step||0);
+ if(delta>0){
+  const sec=f.querySelector('[data-wizard-step="'+step+'"]');
+  for(const inp of sec.querySelectorAll('input,select')) if(!inp.disabled && !inp.checkValidity()){inp.reportValidity();return;}
+  if(step===1){
+    const mode=f.elements.opening_balance_mode.value,date=f.elements.opening_balance_date.value;
+    if(mode!=='legacy'&&date>dateToday())return toast('No puedes iniciar desde una fecha futura.',true);
+    const id=f.dataset.id,a=account(id);
+    if(a&&date!==a.opening_balance_date){try{assertBaselineSafe(a,state.movements,mode==='legacy'?null:date)}catch(e){return toast(e.message,true)}}
+    if(mode==='statement'&&f.elements.stmt_close_date.value!==date)f.elements.stmt_close_date.value=date;
+  }
+ }
+ f.dataset.step=String(Math.max(0,Math.min(2,step+delta)));wizardUpdate();
+}
+async function saveCreditWizard(f){
+ const fd=new FormData(f),id=f.dataset.id||null;
+ const raw=name=>String(fd.get(name)||'').trim();
+ const mode=raw('opening_balance_mode'),start=mode==='legacy'?null:raw('opening_balance_date');
+ const card={...(id?{id}:{}),name:raw('name'),bank_name:raw('bank_name'),last4:raw('last4'),
+  credit_limit:raw('credit_limit'),opening_balance:raw('opening_balance'),opening_balance_date:start,
+  opening_balance_mode:mode,cutoff_day:raw('cutoff_day'),due_day:raw('due_day'),
+  cutoff_tolerance_days:raw('cutoff_tolerance_days'),payment_alert_days:raw('payment_alert_days')};
+ if(!card.name||!Number.isFinite(Number(card.credit_limit))||Number(card.credit_limit)<0||!Number.isFinite(Number(card.opening_balance))||Number(card.opening_balance)<0)
+   throw Error('Revisa los datos, el límite y la deuda inicial.');
+ if(mode!=='legacy'&&(!start||start>dateToday()))throw Error('Indica una fecha válida para el saldo inicial.');
+ if(id&&mode!=='legacy'&&start!==account(id)?.opening_balance_date)assertBaselineSafe(account(id),state.movements,start);
+ const include=fd.has('include_initial_statement');
+ const stmt=include?{close_date:raw('stmt_close_date'),due_date:raw('stmt_due_date'),
+  no_interest_amount:raw('stmt_no_interest_amount'),paid_before_baseline:raw('stmt_paid_before')||'0',
+  bank_available:raw('stmt_available'),notes:'Estado inicial registrado en el asistente'}:null;
+ if(stmt){
+  if(!stmt.close_date||!stmt.due_date||stmt.due_date<stmt.close_date||stmt.close_date>(start||dateToday()))
+    throw Error('Revisa las fechas del estado de cuenta.');
+  if(stmt.no_interest_amount===''||Number(stmt.no_interest_amount)<0||Number(stmt.paid_before_baseline)>Number(stmt.no_interest_amount))
+    throw Error('Indica el pago bancario y revisa los pagos previos.');
+  if(mode==='statement'&&stmt.close_date!==start)throw Error('En modo último corte, el corte y saldo inicial deben tener la misma fecha.');
+ }
+ if(mode==='legacy'&&stmt)throw Error('Primero configura una fecha de saldo inicial para registrar el corte inicial.');
+ if(mode==='legacy'&&!id)throw Error('Las tarjetas nuevas necesitan una fecha de inicio.');
+ if(mode==='demo'){
+  let target=id?state.accounts.find(x=>x.id===id):null;
+  if(target)Object.assign(target,card);else{
+   card.id=uid();card.kind='credit';state.accounts.push({...card});
+  }
+  if(stmt)state.statements.push({id:uid(),account_id:card.id,...stmt,available_at:start,paid_before_baseline:Number(stmt.paid_before_baseline),no_interest_amount:Number(stmt.no_interest_amount)});
+ }else{
+  const {error}=await sb.rpc('save_credit_start',{p_card:card,p_initial_statement:stmt});
+  if(error)throw error;await loadData();
+ }
+}
+
 function openForm(kind,id=null,loanId=null){let item=id?state[kind]?.find(a=>a.id===id):null;if(item===undefined)item=null;const c=categories.map(x=>[x,x]);const creditOpts=optsAccounts('credit');switch(kind){
  case 'accounts':modalOpen(item?'Editar cuenta':'Agregar cuenta o tarjeta','accounts',field('name','Nombre de la cuenta','text',item?.name,'required maxlength="100"',true)+choose('kind','Tipo de cuenta',[['debit','Cuenta de débito'],['cash','Efectivo']],item?.kind||'debit')+field('bank_name','Banco / institución','text',item?.bank_name||'')+field('last4','Últimos cuatro dígitos (opcional)','text',item?.last4,'maxlength="4" pattern="[0-9]{4}"')+field('credit_limit','Límite de crédito','number',item?.credit_limit??0,'step="0.01" min="0"')+field('opening_balance','Saldo inicial / deuda al iniciar','number',item?.opening_balance??0,'step="0.01" required')+field('cutoff_day','Día de corte orientativo (1–28)','number',item?.cutoff_day,'min="1" max="28"')+field('due_day','Día de pago orientativo (1–28)','number',item?.due_day,'min="1" max="28"')+field('cutoff_tolerance_days','Margen de variación del corte (0–3 días)','number',item?.cutoff_tolerance_days??2,'min="0" max="3" required')+field('payment_alert_days','Avisarme antes del pago (1–7 días)','number',item?.payment_alert_days??2,'min="1" max="7" required'),id);break;
  case 'movements':if(!state.accounts.length)return toast('Primero crea una cuenta o tarjeta.',true);modalOpen(item?'Editar movimiento':'Registrar movimiento','movements',choose('account_id','Cuenta o tarjeta',optsAccounts(),item?.account_id)+choose('kind','Tipo de movimiento',Object.entries(kinds),item?.kind||'purchase')+field('transaction_date','Fecha de operación','date',item?.transaction_date||dateToday(),'required')+field('amount','Importe MXN','number',item?.amount||'','min="0.01" step="0.01" required')+field('description','Concepto','text',item?.description||'','placeholder="Supermercado, gasolina..."',true)+choose('category','Categoría',c,item?.category||'Otros')+field('merchant','Comercio (opcional)','text',item?.merchant||'')+choose('statement_id','Asociar pago a estado de cuenta (solo tipo Pago)',[['','Sin asignar'],...state.statements.map(s=>[s.id,`${account(s.account_id)?.name||''} · ${printDate(s.close_date)} · ${money(s.no_interest_amount)}`])],item?.statement_id||'',true),id);break;
@@ -146,14 +264,14 @@ async function persist(table,row,id){if(mode==='demo'){if(id){let i=state[table]
 let query=id?sb.from(table).update(row).eq('id',id).select():sb.from(table).insert(row).select();const {error}=await query;if(error)throw error;await loadData()}
 async function remove(table,id){if(mode==='demo'){state[table]=state[table].filter(x=>x.id!==id);return}const {error}=await sb.from(table).delete().eq('id',id);if(error)throw error;await loadData()}
 async function loadData(){const newS=fresh();for(const t of DB_TABLES){const {data,error}=await sb.from(t).select('*');if(error)throw Error(`No se pudo leer ${t}: ${error.message}`);newS[t]=data||[]}state=newS}
-async function onSubmit(e){e.preventDefault();const f=e.target,table=f.dataset.table,id=f.dataset.id||null;try{const row=collect(f,table);validate(table,row,id);const b=f.querySelector('[type=submit]');b.disabled=true;await persist(table,row,id);modalClose();toast('Registro guardado correctamente ✓');render()}catch(err){toast(err.message||'Error al guardar',true)}finally{let b=f.querySelector('[type=submit]');if(b)b.disabled=false}}
+async function onSubmit(e){e.preventDefault();const f=e.target,table=f.dataset.table,id=f.dataset.id||null;try{const b=f.querySelector('[type=submit]:not(.hidden)');if(b)b.disabled=true;if(table==='credit_wizard'){await saveCreditWizard(f)}else{const row=collect(f,table);validate(table,row,id);await persist(table,row,id)}modalClose();toast('Registro guardado correctamente ✓');render()}catch(err){toast(err.message||'Error al guardar',true)}finally{let b=f.querySelector('[type=submit]');if(b)b.disabled=false}}
 async function deleteItem(table,id){const depends={accounts:[...state.movements,...state.statements,...state.installments].some(x=>x.account_id===id),loans:state.loan_payments.some(x=>x.loan_id===id),movements:state.installments.some(x=>x.movement_id===id),statements:state.movements.some(x=>x.statement_id===id)};if(depends[table])return toast('No se puede borrar: hay registros relacionados. Primero corrígelos o desvincúlalos.',true);if(!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.'))return;try{await remove(table,id);render();toast('Registro eliminado.')}catch(e){toast(e.message,true)}}
 function exportCSV(){const cols=['transaction_date','account','kind','amount','category','description','merchant'];const rows=[cols,...state.movements.map(m=>[m.transaction_date,account(m.account_id)?.name||'',m.kind,num(m.amount).toFixed(2),m.category,m.description,m.merchant])];const escapeCSV=v=>'"'+String(v??'').replaceAll('"','""')+'"';let blob=new Blob(['\ufeff'+rows.map(r=>r.map(escapeCSV).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`brujula-movimientos-${dateToday()}.csv`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('CSV descargado: guárdalo de forma segura.')} 
-async function handleAction(b){const act=b.dataset.act,id=b.dataset.id;if(act==='close')return modalClose();if(act==='new-account')return openCreditWizard();if(act==='new-cash-account')return openForm('accounts');if(act==='new-movement')return openForm('movements');if(act==='new-installment')return openForm('installments');if(act==='new-statement')return openForm('statements');if(act==='card-statement')return openForm('statements',null,id);if(act==='new-loan')return openForm('loans');if(act==='new-loan-payment')return openForm('loan_payments',null,id);if(act==='edit-account'){const a=account(id);return a?.kind==='credit'?openCreditWizard(id):openForm('accounts',id)}if(act==='edit-movement')return openForm('movements',id);if(act==='edit-installment')return openForm('installments',id);if(act==='edit-statement')return openForm('statements',id);if(act==='edit-loan')return openForm('loans',id);if(act==='edit-loan-payment')return openForm('loan_payments',id);if(act==='delete')return deleteItem(b.dataset.table,id);if(act==='export')return exportCSV();if(act==='advance-installment'){let p=state.installments.find(x=>x.id===id);if(!p)return;if(p.installments_paid>=p.months)return toast('Las mensualidades ya están completas.');if(!confirm(`¿Marcar como pagada la mensualidad ${p.installments_paid+1} de ${p.months}? Confirma antes en el banco.`))return;try{let count=p.installments_paid+1;await persist('installments',{installments_paid:count,status:count>=p.months?'finished':'active'},id);render();toast('Mensualidad registrada ✓')}catch(e){toast(e.message,true)}}}
+async function handleAction(b){const act=b.dataset.act,id=b.dataset.id;if(act==='wizard-next')return wizardGo(1);if(act==='wizard-prev')return wizardGo(-1);if(act==='close')return modalClose();if(act==='new-account')return openCreditWizard();if(act==='new-cash-account')return openForm('accounts');if(act==='new-movement')return openForm('movements');if(act==='new-installment')return openForm('installments');if(act==='new-statement')return openForm('statements');if(act==='card-statement')return openForm('statements',null,id);if(act==='new-loan')return openForm('loans');if(act==='new-loan-payment')return openForm('loan_payments',null,id);if(act==='edit-account'){const a=account(id);return a?.kind==='credit'?openCreditWizard(id):openForm('accounts',id)}if(act==='edit-movement')return openForm('movements',id);if(act==='edit-installment')return openForm('installments',id);if(act==='edit-statement')return openForm('statements',id);if(act==='edit-loan')return openForm('loans',id);if(act==='edit-loan-payment')return openForm('loan_payments',id);if(act==='delete')return deleteItem(b.dataset.table,id);if(act==='export')return exportCSV();if(act==='advance-installment'){let p=state.installments.find(x=>x.id===id);if(!p)return;if(p.installments_paid>=p.months)return toast('Las mensualidades ya están completas.');if(!confirm(`¿Marcar como pagada la mensualidad ${p.installments_paid+1} de ${p.months}? Confirma antes en el banco.`))return;try{let count=p.installments_paid+1;await persist('installments',{installments_paid:count,status:count>=p.months?'finished':'active'},id);render();toast('Mensualidad registrada ✓')}catch(e){toast(e.message,true)}}}
 async function refreshFromCloud(manual=false){if(mode!=='live'||!sb)return;if(!navigator.onLine){if(manual)toast('Sin internet: los registros en la nube no están disponibles.',true);return}if(!$('#modal').classList.contains('hidden')){if(manual)toast('Cierra primero el formulario sin guardar para actualizar.',true);return}try{await loadData();render();if(manual)toast('Datos actualizados desde Supabase ✓')}catch(e){toast('No se pudo sincronizar: '+e.message,true)}}
 async function logout(){if(mode==='live'&&sb){await sb.auth.signOut()}mode='demo';state=fresh();$('#shell').classList.add('hidden');$('#gate').classList.remove('hidden')}
 async function authConnect(){let cfg=window.FINANZAS_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey){$('#auth-notice').textContent='El acceso real se habilitará cuando se cree la nueva base de datos. Puedes explorar el demo.';$('#auth-form').classList.add('hidden');return}try{const pkg=await import('https://esm.sh/@supabase/supabase-js@2.49.10');sb=pkg.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session},error}=await sb.auth.getSession();if(error)throw error;if(session){mode='live';await loadData();showShell()}}catch(e){$('#auth-notice').textContent='No fue posible conectar con la base de datos: '+e.message;toast('Error de conexión a Supabase.',true)}}
-function bind(){document.addEventListener('click',async e=>{const nav=e.target.closest('[data-page]');if(nav){page=nav.dataset.page;render();if(page==='movements')updateMovementTable();window.scrollTo({top:0,behavior:'smooth'});return}let b=e.target.closest('[data-act]');if(b)await handleAction(b)});$('#quick-add').addEventListener('click',()=>openForm('movements'));$('#sync-now').addEventListener('click',()=>refreshFromCloud(true));window.addEventListener('focus',()=>refreshFromCloud(false));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshFromCloud(false)});$('#close-modal').addEventListener('click',modalClose);$('#modal').addEventListener('click',e=>{if(e.target===$('#modal'))modalClose()});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').classList.contains('hidden'))modalClose()});$('#modal-form').addEventListener('submit',onSubmit);$('#content').addEventListener('input',e=>{if(['mov-search','mov-account','mov-kind'].includes(e.target.id))updateMovementTable()});$('#content').addEventListener('change',e=>{if(['mov-search','mov-account','mov-kind'].includes(e.target.id))updateMovementTable()});$('#logout').addEventListener('click',logout);$('#demo').addEventListener('click',()=>{mode='demo';state=sample();page='dashboard';showShell()});$('#auth-form').addEventListener('submit',async e=>{e.preventDefault();if(!sb)return;try{const email=$('#auth-email').value,password=$('#auth-pass').value;const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;mode='live';await loadData();page='dashboard';showShell()}catch(e){$('#auth-notice').textContent=e.message;toast('No fue posible entrar.',true)}});$('#signup').addEventListener('click',async()=>{if(!sb)return;let email=$('#auth-email').value,password=$('#auth-pass').value;if(!email||password.length<6)return toast('Ingresa correo y contraseña de 6 caracteres mínimo.',true);try{let {error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:'https://javi-jim2026.github.io/brujula-finanzas/'}});if(error)throw error;$('#auth-notice').textContent='Registro solicitado. Revisa tu correo si está activada la confirmación de email.';toast('Verifica tu correo para continuar.')}catch(e){toast(e.message,true)}})}
+function bind(){document.addEventListener('click',async e=>{const nav=e.target.closest('[data-page]');if(nav){page=nav.dataset.page;render();if(page==='movements')updateMovementTable();window.scrollTo({top:0,behavior:'smooth'});return}let b=e.target.closest('[data-act]');if(b)await handleAction(b)});$('#quick-add').addEventListener('click',()=>openForm('movements'));$('#sync-now').addEventListener('click',()=>refreshFromCloud(true));window.addEventListener('focus',()=>refreshFromCloud(false));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshFromCloud(false)});$('#close-modal').addEventListener('click',modalClose);$('#modal').addEventListener('click',e=>{if(e.target===$('#modal'))modalClose()});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal').classList.contains('hidden'))modalClose()});$('#modal-form').addEventListener('submit',onSubmit);$('#modal-form').addEventListener('change',e=>{if(['opening_balance_mode','include_initial_statement'].includes(e.target.name))wizardUpdate()});$('#content').addEventListener('input',e=>{if(['mov-search','mov-account','mov-kind'].includes(e.target.id))updateMovementTable()});$('#content').addEventListener('change',e=>{if(['mov-search','mov-account','mov-kind'].includes(e.target.id))updateMovementTable()});$('#logout').addEventListener('click',logout);$('#demo').addEventListener('click',()=>{mode='demo';state=sample();page='dashboard';showShell()});$('#auth-form').addEventListener('submit',async e=>{e.preventDefault();if(!sb)return;try{const email=$('#auth-email').value,password=$('#auth-pass').value;const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;mode='live';await loadData();page='dashboard';showShell()}catch(e){$('#auth-notice').textContent=e.message;toast('No fue posible entrar.',true)}});$('#signup').addEventListener('click',async()=>{if(!sb)return;let email=$('#auth-email').value,password=$('#auth-pass').value;if(!email||password.length<6)return toast('Ingresa correo y contraseña de 6 caracteres mínimo.',true);try{let {error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:'https://javi-jim2026.github.io/brujula-finanzas/'}});if(error)throw error;$('#auth-notice').textContent='Registro solicitado. Revisa tu correo si está activada la confirmación de email.';toast('Verifica tu correo para continuar.')}catch(e){toast(e.message,true)}})}
 bind();authConnect();
 
 // Instalación opcional como aplicación web. Solo se almacena el cascarón, nunca registros financieros en caché.
