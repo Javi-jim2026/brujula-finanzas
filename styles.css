@@ -109,3 +109,18 @@
 #brujula-install-action{flex-shrink:0}
 @media(max-width:540px){#brujula-install-action{padding:7px 9px;font-size:.67rem}
  .install-panel{padding:12px}}
+
+/* Brújula v1.7 · instalador PWA, sin afectar la interfaz autenticada */
+.install-hint{margin-top:16px;padding:14px;border:1px solid #dedff3;border-radius:13px;background:#f5f5ff}
+.install-hint-title{font-size:.9rem;font-weight:800;margin:0 0 7px;color:#31365e}
+.install-hint-status{font-size:.78rem;color:#4f5981;line-height:1.5;margin:0 0 12px}
+.install-hint .btn{margin:0 0 8px}
+.pwa-help-layer{position:fixed;inset:0;background:#14233ab8;display:grid;place-items:center;z-index:999;
+ padding:16px;overflow:auto}
+.pwa-help-card{background:#fff;color:#1b2c46;border-radius:16px;box-shadow:0 16px 70px #101a344a;
+ width:min(520px,100%);max-height:90vh;overflow:auto;padding:24px}
+.pwa-help-card h2{font-size:1.2rem;margin:0 0 14px}
+.pwa-help-card p{line-height:1.8;font-size:.86rem}
+.pwa-help-card .pwa-help-hint{font-size:.78rem;padding:11px 14px;background:#f4f5fc;border-radius:9px}
+.pwa-help-footer{display:flex;justify-content:flex-end;margin-top:12px}
+@media(max-width:650px){.top-actions [data-install-brujula]{font-size:.71rem;padding:8px}.top-actions{gap:5px}}
