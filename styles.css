@@ -143,3 +143,15 @@
 .signin #recovery-notice{min-height:0;overflow-wrap:anywhere}
 .signin #recovery-notice:empty{display:none}
 .signin #recovery-new-password,.signin #recovery-repeat-password{font-size:1rem}
+
+/* Brújula v1.9 — reserva de pagos entre nóminas 15 y 30 */
+.paycheck-panel{margin:18px 0 24px}
+.paycheck-panel>.section-title{margin-bottom:9px}
+.cash-section{border-top:1px solid #e9edf4;margin-top:18px;padding-top:20px}
+.cash-section .grid.stats{margin:12px 0}
+.cash-controls{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.cash-controls b{font-size:.87rem;text-align:center}
+.cash-section .feature-list-row{margin:0}
+.cash-section .notice{margin:15px 0 0}
+.paycheck-panel .featured strong{overflow-wrap:anywhere}
+@media(max-width:700px){.cash-controls{flex-wrap:wrap;justify-content:center}.paycheck-panel{padding:17px}.cash-section .feature-list-row{align-items:flex-start}}
