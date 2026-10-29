@@ -1,5 +1,5 @@
-/* Brújula v1.8: cache only public UI resources; never cache Supabase responses. */
-const CACHE = 'brujula-shell-v1.8';
+/* Brújula v1.8.1: cache only public UI resources; never cache Supabase responses. */
+const CACHE = 'brujula-shell-v1.8.1';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './finance-rules.mjs', './planning-rules.mjs', './planning-ui.mjs', './statement-import.mjs', './recurring-review.mjs', './account-detail.mjs', './install-app.mjs', './install-helper.mjs', './password-recovery.mjs', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
