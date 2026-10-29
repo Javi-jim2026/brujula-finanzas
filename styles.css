@@ -76,3 +76,20 @@
  .import-actions{flex-direction:column;align-items:stretch}
  .import-actions .btn{white-space:normal}
 }
+
+/* Brújula v1.6 — expediente individual y formulario de pago simplificado */
+.bank-card .bottom{flex-wrap:wrap;gap:10px;align-items:center}
+.bank-card .bottom .inline-actions{align-items:center;gap:7px}
+.bank-card .btn-mini{color:#252f5b;font-size:.72rem}
+.account-context{margin:16px 0;background:#eef0ff;border:1px solid #dddef9;color:#34416b;
+ padding:16px;border-radius:14px;font-size:.83rem;display:grid;gap:8px;line-height:1.5}
+.account-pagination{display:flex;justify-content:space-between;align-items:center;
+ gap:10px;flex-wrap:wrap;padding:16px 0}
+.account-pagination button:disabled{opacity:.45;cursor:default}
+.feature-list-row .feature-actions .btn-mini{white-space:normal}
+#payment-hint{margin:0}
+@media(max-width:700px){
+ .bank-card .bottom{display:flex;flex-direction:column;align-items:flex-start}
+ .bank-card .bottom .inline-actions{width:100%;justify-content:flex-start}
+ .account-pagination{flex-direction:column;align-items:flex-start}
+}
