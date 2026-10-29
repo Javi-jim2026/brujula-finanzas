@@ -124,3 +124,22 @@
 .pwa-help-card .pwa-help-hint{font-size:.78rem;padding:11px 14px;background:#f4f5fc;border-radius:9px}
 .pwa-help-footer{display:flex;justify-content:flex-end;margin-top:12px}
 @media(max-width:650px){.top-actions [data-install-brujula]{font-size:.71rem;padding:8px}.top-actions{gap:5px}}
+
+/* Recuperación de contraseña v1.8 */
+.auth-recovery-link{display:flex;justify-content:flex-end;margin:8px 0 14px}
+.auth-recovery-link .linkbtn{font-size:.82rem}
+.signin #recovery-request-panel,
+.signin #recovery-update-panel,
+.signin #recovery-sent-panel,
+.signin #recovery-error-panel,
+.signin #recovery-complete-panel{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.signin #recovery-request-panel.hidden,
+.signin #recovery-update-panel.hidden,
+.signin #recovery-sent-panel.hidden,
+.signin #recovery-error-panel.hidden,
+.signin #recovery-complete-panel.hidden{display:none}
+.signin [id^="recovery-"] h2{font-size:1.15rem;margin:0;color:#152a47}
+.signin [id^="recovery-"] p{line-height:1.55}
+.signin #recovery-notice{min-height:0;overflow-wrap:anywhere}
+.signin #recovery-notice:empty{display:none}
+.signin #recovery-new-password,.signin #recovery-repeat-password{font-size:1rem}
