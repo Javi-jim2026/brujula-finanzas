@@ -31,4 +31,7 @@ test('El controlador principal mantiene navegación para todos los módulos',()=
  for(const m of ['planning-ui.mjs','statement-import.mjs','finance-rules.mjs'])assert.ok(app.includes(m));
  const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
  for(const page of ['bills','calendar','budgets','import','reminders'])assert.ok(html.includes('data-page="'+page+'"'));
+ const mobile=html.match(/<nav class="bottom-nav" id="mobile-nav">([\s\S]*?)<\/nav>/)?.[1]||'';
+ assert.ok(mobile.includes('data-page="statements"'),'Pagos debe estar en el menú móvil');
+ assert.ok(mobile.indexOf('data-page="statements"')<mobile.indexOf('data-page="movements"'),'Pagos debe ser accesible al inicio del menú');
 });
