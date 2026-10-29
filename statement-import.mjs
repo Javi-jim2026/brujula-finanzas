@@ -10,7 +10,7 @@ function amountVal(v){
  return Math.abs(Number(s));
 }
 function signVal(v){return String(v??'').includes('(')||String(v??'').trim().startsWith('-')?-1:1}
-function cleanDate(v){
+export function cleanDate(v){
  if(v instanceof Date&&!Number.isNaN(v.getTime()))return v.toISOString().slice(0,10);
  const x=String(v??'').trim();let m=x.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
  if(m){const s=[m[1],m[2].padStart(2,'0'),m[3].padStart(2,'0')].join('-');return s}
@@ -25,11 +25,11 @@ function csvSplitLine(s,delim){let row=[],field='',quoted=false;
  else field+=c}
  row.push(field.trim());return row;
 }
-function csvMatrix(text){
+export function csvMatrix(text){
  const first=text.split(/\r?\n/).slice(0,8),delims=[';',',','\t','|'],d=delims.map(x=>({x,n:first.map(l=>csvSplitLine(l,x).length-1).reduce((s,v)=>s+v,0)})).sort((a,b)=>b.n-a.n)[0].x;
  return text.replace(/^\uFEFF/,'').split(/\r?\n/).map(s=>csvSplitLine(s,d)).filter(r=>r.some(c=>c!==''));
 }
-function detectTable(matrix,acc){
+export function detectTable(matrix,acc){
  let headerIdx=-1, map={},heads=[];
  const keywords={date:/\b(fecha|date|f\.?\s*operaci[oó]n)\b/i,
  desc:/concepto|descripci[oó]n|comercio|merchant|detalle|movimiento|referencia/i,
