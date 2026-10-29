@@ -33,11 +33,12 @@ jobs:
           node --check statement-import.mjs
           node --check recurring-review.mjs
           node --check account-detail.mjs
+          node --check install-helper.mjs
           node --test tests/*.test.mjs
       - name: Preparar únicamente archivos públicos de la aplicación
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js finance-rules.mjs planning-rules.mjs planning-ui.mjs statement-import.mjs recurring-review.mjs account-detail.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
+          cp index.html styles.css app.js finance-rules.mjs planning-rules.mjs planning-ui.mjs statement-import.mjs recurring-review.mjs account-detail.mjs install-helper.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
       - name: Empaquetar sitio
         uses: actions/upload-pages-artifact@v3
         with:
