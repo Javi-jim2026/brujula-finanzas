@@ -61,6 +61,8 @@ export function openMsiLink(ctx,planId){
 export function updateMsiMode(){
  const f=document.getElementById('modal-form');if(f?.dataset.table!=='msi_link')return;
  const mode=f.elements.payment_mode?.value;
+ if(f.elements.payment_id)f.elements.payment_id.disabled=mode!=='existing';
+ if(f.elements.statement_id)f.elements.statement_id.disabled=mode!=='new';
  f.querySelector('.msi-existing-fields')?.classList.toggle('hidden',mode!=='existing');
  f.querySelector('.msi-new-fields')?.classList.toggle('hidden',mode!=='new');
  for(const name of ['payment_date','payment_total'])if(f.elements[name])f.elements[name].required=mode==='new';
