@@ -17,7 +17,7 @@ export function recurringDates(b,from,to){
   const startYM=d.slice(0,7),fixedDay=Number(b.due_day)||Number(d.slice(-2));
   for(let n=0;n<240;n++){
    const month=addMonths(startYM,n*(b.frequency==='yearly'?12:1)),day=monthlyDate(month,fixedDay);
-   if(day>to)break;if(day>=from)results.push(day);
+   if(day>to)break;if(day>=from && day>=d)results.push(day);
   }
  }else{
   const interval=b.frequency==='biweekly'?14:7;
