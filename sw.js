@@ -1,6 +1,6 @@
-/* Brújula v1.7: cache only public UI resources; never cache Supabase responses. */
-const CACHE = 'brujula-shell-v1.7';
-const SHELL = ['./', './index.html', './styles.css', './app.js', './finance-rules.mjs', './planning-rules.mjs', './planning-ui.mjs', './statement-import.mjs', './recurring-review.mjs', './account-detail.mjs', './install-app.mjs', './install-helper.mjs', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+/* Brújula v1.8: cache only public UI resources; never cache Supabase responses. */
+const CACHE = 'brujula-shell-v1.8';
+const SHELL = ['./', './index.html', './styles.css', './app.js', './finance-rules.mjs', './planning-rules.mjs', './planning-ui.mjs', './statement-import.mjs', './recurring-review.mjs', './account-detail.mjs', './install-app.mjs', './install-helper.mjs', './password-recovery.mjs', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
@@ -12,7 +12,7 @@ self.addEventListener('fetch', e => {
   if (url.origin !== self.location.origin || e.request.method !== 'GET') return;
   // Exclude all API/data requests, and only cache the exact application assets.
   const path = url.pathname.split('/').pop() || 'index.html';
-  const allowed = new Set(['index.html','styles.css','app.js','finance-rules.mjs','planning-rules.mjs','planning-ui.mjs','statement-import.mjs','recurring-review.mjs','account-detail.mjs', 'install-app.mjs','install-helper.mjs','config.js','manifest.webmanifest','icon-192.png','icon-512.png']);
+  const allowed = new Set(['index.html','styles.css','app.js','finance-rules.mjs','planning-rules.mjs','planning-ui.mjs','statement-import.mjs','recurring-review.mjs','account-detail.mjs', 'install-app.mjs','install-helper.mjs','password-recovery.mjs','config.js','manifest.webmanifest','icon-192.png','icon-512.png']);
   if (!allowed.has(path)) return;
   e.respondWith(fetch(e.request).then(resp=>{
     if(resp.ok && resp.type==='basic') {const copy=resp.clone(); caches.open(CACHE).then(cache=>cache.put(e.request,copy));}
