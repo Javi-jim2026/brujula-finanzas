@@ -1,7 +1,7 @@
 /* Brújula v1.5: pantallas de planificación. No hay cargos bancarios automáticos. */
 import {monthlyFixedBills,monthEquivalent,dueEvents,addDays,addMonths,monthlyDate,budgetSpent,amortization,cash} from './planning-rules.mjs';
 
-let calendarMonth=null,forecastDays=45,selectedLoan=null;
+let calendarMonth=null,budgetMonth=null,selectedLoan=null;
 const esc = x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n=>new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(n)||0);
 const xdate = d=>d?new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
@@ -21,11 +21,12 @@ return '<div class="page-head"><div><h1>Gastos fijos</h1><p class="muted">Todos 
 }
 function stat(t,v,s){return '<div class="panel stat"><label>'+t+'</label><strong>'+v+'</strong><span class="hint">'+s+'</span></div>'}
 function renderBudgets(ctx){
- const ym=ctx.thisMonth(),budgets=(ctx.state.budgets||[]).filter(b=>b.month?.startsWith(ym));const mov=ctx.state.movements||[];
+ const ym=budgetMonth||ctx.thisMonth(),budgets=(ctx.state.budgets||[]).filter(b=>b.month?.startsWith(ym));const mov=ctx.state.movements||[];
  let planned=0,spent=0;
  const rows=budgets.map(b=>{const amount=cash(b.amount),actual=budgetSpent(mov,ym,b.category);planned+=amount;spent+=actual;const pct=Math.max(0,Math.min(100,amount?100*actual/amount:0));
  return '<div class="budget-row"><div class="row-title"><b>'+esc(b.category)+'</b><span>'+money(actual)+' / '+money(amount)+'</span></div><div class="budget-meter"><i style="width:'+pct+'%;background:'+(actual>amount?'#d15b67':'#635ddb')+'"></i></div><div class="inline-actions"><span class="muted small">'+(actual>amount?'⚠️ Excedido por '+money(actual-amount):'Restante '+money(amount-actual))+'</span><button class="btn-mini" data-act="budget-edit" data-id="'+b.id+'">Editar</button><button class="btn-mini" data-act="budget-delete" data-id="'+b.id+'">Eliminar</button></div></div>'}).join('');
  return '<div class="page-head"><div><h1>Presupuestos</h1><p class="muted">Límites mensuales por categoría, sin considerar pagos a tarjetas como un gasto nuevo.</p></div><button class="btn primary" data-act="budget-new">+ Definir límite</button></div>'
+ +'<div class="feature-cal-title"><button class="btn outline small-btn" data-act="budget-back">←</button><strong>Presupuestos · '+esc(ym)+'</strong><button class="btn outline small-btn" data-act="budget-next">→</button></div>'
  +'<div class="grid stats">'+stat('Presupuesto asignado',money(planned),'Mes '+ym)+stat('Gasto registrado',money(spent),'Categorías presupuestadas')+stat('Disponible para gastar',money(planned-spent),'Puede ser negativo')+stat('Categorías',budgets.length,'Con límite este mes')+'</div>'
  +box('Categorías con límite · '+esc(ym),rows||'<p class="muted">Todavía no has establecido presupuestos para este mes.</p>',
  'Los presupuestos se calculan con las compras y gastos registrados; no suman pagos a tarjetas, transferencias ni mensualidades MSI por segunda vez.');
@@ -99,7 +100,7 @@ export function openBillForm(ctx,id=null){
 export function openBudgetForm(ctx,id=null){
  const b=id?ctx.state.budgets.find(x=>x.id===id):null;
  const html=ctx.choose('category','Categoría',ctx.categories.map(x=>[x,x]),b?.category||'Alimentos')
- +ctx.field('month','Mes del presupuesto','month',b?.month?.slice(0,7)||ctx.thisMonth(),'required')
+ +ctx.field('month','Mes del presupuesto','month',b?.month?.slice(0,7)||budgetMonth||ctx.thisMonth(),'required')
  +ctx.field('amount','Límite del mes (MXN)','number',b?.amount??'','min="0.01" step="0.01" required',true);
  ctx.modalOpen(b?'Editar límite':'Nuevo presupuesto','budgets',html,id);
 }
@@ -110,6 +111,7 @@ export async function extraAction(b,ctx){
  if(act==='budget-new'){openBudgetForm(ctx);return true}
  if(act==='budget-edit'){openBudgetForm(ctx,id);return true}
  if(act==='cal-next'||act==='cal-back'){calendarMonth=addMonths(calendarMonth||ctx.thisMonth(),act==='cal-next'?1:-1);ctx.render();return true}
+ if(act==='budget-next'||act==='budget-back'){budgetMonth=addMonths(budgetMonth||ctx.thisMonth(),act==='budget-next'?1:-1);ctx.render();return true}
  if(act==='loan-amort'){selectedLoan=id;ctx.setPage('amortization');return true}
  if(act==='bill-delete'||act==='budget-delete'){if(!confirm('¿Eliminar este registro programado? No afecta movimientos bancarios.'))return true;try{await ctx.remove(act==='bill-delete'?'recurring_bills':'budgets',id);ctx.render();ctx.toast('Registro eliminado.')}catch(e){ctx.toast(e.message,true)}return true}
  if(act==='bill-check'){try{const exists=ctx.state.recurring_checks.some(x=>x.bill_id===id&&x.occurrence_date===b.dataset.date);if(exists){ctx.toast('Este compromiso ya está confirmado.');return true}
