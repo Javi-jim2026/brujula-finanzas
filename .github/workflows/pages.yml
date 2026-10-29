@@ -28,11 +28,14 @@ jobs:
         run: |
           node --check app.js
           node --check finance-rules.mjs
-          node --test tests/finance-rules.test.mjs
+          node --check planning-rules.mjs
+          node --check planning-ui.mjs
+          node --check statement-import.mjs
+          node --test tests/*.test.mjs
       - name: Preparar únicamente archivos públicos de la aplicación
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js finance-rules.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
+          cp index.html styles.css app.js finance-rules.mjs planning-rules.mjs planning-ui.mjs statement-import.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
       - name: Empaquetar sitio
         uses: actions/upload-pages-artifact@v3
         with:
