@@ -5,7 +5,43 @@
   <div class="brand brand-big"><span class="brand-logo">◈</span><span>brújula<span class="brand-dot">.</span><small>FINANZAS PERSONALES</small></span></div>
   <h1>Tu dinero, <em>en orden.</em></h1><p class="muted">Tarjetas, meses sin intereses, efectivo y créditos, todos en un mismo lugar.</p>
   <form id="auth-form" class="stack"><label>Correo electrónico<input type="email" id="auth-email" autocomplete="username" required placeholder="tu@correo.com"></label><label>Contraseña<input id="auth-pass" type="password" minlength="6" autocomplete="current-password" required placeholder="Mínimo 6 caracteres"></label><div class="auth-buttons"><button class="btn primary" type="submit" id="signin">Ingresar</button><button class="btn soft" type="button" id="signup">Crear mi acceso</button></div></form>
-  <p class="login-note" id="auth-notice"></p><div class="demo-border"><p class="muted small">¿Quieres conocer la plataforma antes de configurarla?</p><button class="btn outline full" id="demo" type="button">Explorar demo con datos ficticios →</button><p class="micro">El demo no guarda información.</p></div><div class="install-hint" id="install-help"><p class="install-hint-title">📱 Instalar en tu celular</p><p data-install-status class="install-hint-status">Comprobando modo de apertura…</p><button class="btn outline full" type="button" data-install-brujula>⬇ Instalar como app</button><p class="micro">Una instalación correcta se abre sin barra de direcciones de Chrome.</p></div>
+  <div class="auth-recovery-link"><button type="button" id="forgot-password" class="linkbtn">¿Olvidaste tu contraseña?</button></div>
+  <section id="recovery-request-panel" class="hidden" aria-label="Solicitar recuperación">
+    <h2>Recuperar mi contraseña</h2>
+    <p class="muted small">Te enviaremos un enlace para crear una nueva contraseña. Tu cuenta y tus movimientos seguirán intactos.</p>
+    <form id="recovery-request-form" class="stack">
+      <label>Correo de Brújula<input type="email" id="recovery-email" autocomplete="email" placeholder="tu@correo.com" required></label>
+      <button type="submit" class="btn primary full" id="recovery-send-btn">Enviar enlace de recuperación</button>
+    </form>
+    <button type="button" class="linkbtn" data-recovery-back>Volver a ingresar</button>
+  </section>
+  <section id="recovery-sent-panel" class="hidden" aria-label="Correo de recuperación solicitado">
+    <h2>📩 Revisa tu correo</h2>
+    <p class="muted">Si el correo está registrado y el servicio permite enviar mensajes, recibirás un enlace para establecer una contraseña nueva. Revisa también Spam o Correo no deseado.</p>
+    <p class="muted small">Abre el enlace en el mismo navegador donde instalaste Brújula. Nunca compartas el enlace ni el código.</p>
+    <button type="button" class="btn outline full" data-recovery-back>Volver a ingresar</button>
+  </section>
+  <section id="recovery-update-panel" class="hidden" aria-label="Establecer contraseña nueva">
+    <h2>🔒 Establece tu nueva contraseña</h2>
+    <p class="muted small">Enlace verificado. Utiliza una contraseña nueva de al menos ocho caracteres.</p>
+    <form id="recovery-update-form" class="stack">
+      <label>Nueva contraseña<input type="password" id="recovery-new-password" minlength="8" maxlength="72" autocomplete="new-password" required></label>
+      <label>Repite la nueva contraseña<input type="password" id="recovery-repeat-password" minlength="8" maxlength="72" autocomplete="new-password" required></label>
+      <button type="submit" class="btn primary full" id="recovery-update-btn">Guardar nueva contraseña</button>
+    </form>
+  </section>
+  <section id="recovery-error-panel" class="hidden" aria-label="Enlace de recuperación no válido">
+    <h2>Enlace no disponible</h2>
+    <p class="muted small">Si el enlace venció o se abrió en un navegador diferente, solicita uno nuevo.</p>
+    <button type="button" class="btn outline full" data-recovery-back>Solicitar otro enlace</button>
+  </section>
+  <section id="recovery-complete-panel" class="hidden" aria-label="Contraseña actualizada">
+    <h2>✅ Contraseña actualizada</h2>
+    <p class="muted">Tu contraseña cambió correctamente. Ahora puedes iniciar sesión con tu correo y la nueva contraseña.</p>
+    <button type="button" class="btn primary full" data-recovery-back>Ir a iniciar sesión</button>
+  </section>
+  <p class="login-note" id="recovery-notice" role="status" aria-live="polite"></p>
+  <p class="login-note" id="auth-notice"></p><div class="demo-border" id="demo-border"><p class="muted small">¿Quieres conocer la plataforma antes de configurarla?</p><button class="btn outline full" id="demo" type="button">Explorar demo con datos ficticios →</button><p class="micro">El demo no guarda información.</p></div><div class="install-hint" id="install-help"><p class="install-hint-title">📱 Instalar en tu celular</p><p data-install-status class="install-hint-status">Comprobando modo de apertura…</p><button class="btn outline full" type="button" data-install-brujula>⬇ Instalar como app</button><p class="micro">Una instalación correcta se abre sin barra de direcciones de Chrome.</p></div>
 </div></div>
 <div id="shell" class="shell hidden">
 <aside class="sidebar">
@@ -15,7 +51,7 @@
  <div class="aside-footer"><span class="dot"></span><span id="session-label">Modo demo</span><button id="logout" title="Salir">Salir ↗</button></div>
 </aside>
 <div class="workspace"><header class="topbar"><div class="mobile-brand">◈ brújula<span>.</span></div><div class="breadcrumb">Mi espacio <span>/</span> <b id="crumb">Resumen</b></div><div class="top-actions"><span class="safe-chip">🔒 Acceso privado</span><button type="button" class="btn outline small-btn" data-install-brujula>⬇ Instalar app</button><button class="btn outline small-btn" id="sync-now" type="button" title="Actualizar desde la nube">⟳</button><button class="btn primary small-btn" id="quick-add">+ Registrar movimiento</button></div></header>
-<main class="content" id="content"></main><footer class="app-footer">Brújula v1.7 · Tus registros son privados por usuario · MXN</footer></div>
+<main class="content" id="content"></main><footer class="app-footer">Brújula v1.8 · Tus registros son privados por usuario · MXN</footer></div>
 <nav class="bottom-nav" id="mobile-nav"><button data-page="dashboard" class="active">◫<small>Inicio</small></button><button data-page="accounts">▤<small>Tarjetas</small></button><button data-page="movements">⇄<small>Registro</small></button><button data-page="installments">▦<small>MSI</small></button><button data-page="loans">♧<small>Créditos</small></button><button data-page="bills">🔁<small>Fijos</small></button><button data-page="calendar">▦<small>Agenda</small></button><button data-page="budgets">◉<small>Metas</small></button><button data-page="import">⇧<small>Importar</small></button><button data-page="reminders">♢<small>Avisos</small></button></nav>
 </div>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="dialog"><header><h2 id="modal-title"></h2><button class="icon-btn" id="close-modal" title="Cerrar" aria-label="Cerrar">✕</button></header><form id="modal-form" class="dialog-form"></form></div></div>
