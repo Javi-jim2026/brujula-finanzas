@@ -1,5 +1,6 @@
 /* Brújula v1.5: pantallas de planificación. No hay cargos bancarios automáticos. */
 import {monthlyFixedBills,monthEquivalent,dueEvents,addDays,addMonths,monthlyDate,budgetSpent,amortization,cash} from './planning-rules.mjs';
+import {recurringReviewPanel,recurringAction} from './recurring-review.mjs';
 
 let calendarMonth=null,budgetMonth=null,selectedLoan=null;
 const esc = x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -8,13 +9,14 @@ const xdate = d=>d?new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'2-di
 function box(title,body,foot=''){return '<section class="panel section feature-panel"><h3>'+title+'</h3>'+body+(foot?'<p class="tip">'+foot+'</p>':'')+'</section>'}
 function line(left,right){return '<div class="summary-line"><span>'+left+'</span><b>'+right+'</b></div>'}
 function details(b,ctx){const st=ctx.state, id=b.id,date=nextBillDate(b,ctx.dateToday(),st.recurring_checks||[]);const checked=(st.recurring_checks||[]).some(x=>x.bill_id===id&&x.occurrence_date===date);
-return '<div class="feature-list-row"><div><strong>'+esc(b.name)+'</strong><small>'+esc(b.category)+' · '+esc(({weekly:'Semanal',biweekly:'Quincenal',monthly:'Mensual',yearly:'Anual'})[b.frequency]||b.frequency)+' · Próximo '+xdate(date)+'</small><small>Equivalente mensual '+money(monthEquivalent(b))+' · '+(b.account_id?esc(st.accounts.find(a=>a.id===b.account_id)?.name||'Cuenta'):'Sin cuenta asignada')+'</small></div><div class="feature-actions"><b>'+money(b.amount)+'</b><div class="inline-actions"><button class="btn-mini" data-act="bill-edit" data-id="'+id+'">Editar</button><button class="btn-mini" data-act="bill-check" data-id="'+id+'" data-date="'+date+'" '+(checked?'disabled':'')+'>'+(checked?'✓ Confirmado':'Confirmar realizado')+'</button><button class="btn-mini" data-act="bill-delete" data-id="'+id+'">Eliminar</button></div></div></div>'}
+return '<div class="feature-list-row"><div><strong>'+esc(b.name)+'</strong><small>'+esc(b.category)+' · '+esc(({weekly:'Semanal',biweekly:'Quincenal',monthly:'Mensual',yearly:'Anual'})[b.frequency]||b.frequency)+' · Próximo '+xdate(date)+'</small><small>Equivalente mensual '+money(monthEquivalent(b))+' · '+(b.account_id?esc(st.accounts.find(a=>a.id===b.account_id)?.name||'Cuenta'):'Sin cuenta asignada')+'</small></div><div class="feature-actions"><b>'+money(b.amount)+'</b><div class="inline-actions"><button class="btn-mini" data-act="bill-edit" data-id="'+id+'">Editar</button><button class="btn-mini" data-act="bill-pending">Ver pendientes</button><button class="btn-mini" data-act="bill-delete" data-id="'+id+'">Eliminar</button></div></div></div>'}
 function nextBillDate(b,today,checks=[]){const from=today.slice(0,7)+'-01';const list=dueEvents({recurring_bills:[b]},from,addDays(today,400)).filter(x=>x.type==='recurring');const unconfirmed=list.find(x=>!checks.some(c=>c.bill_id===b.id&&c.occurrence_date===x.date));return unconfirmed?.date||list.at(-1)?.date||b.next_date||today}
 function renderBills(ctx){const bills=ctx.state.recurring_bills||[],active=bills.filter(b=>b.active),expenses=active.filter(b=>b.direction!=='income'),income=active.filter(b=>b.direction==='income');
 const total=monthlyFixedBills(bills),monthlyIncome=cash(income.reduce((s,b)=>s+monthEquivalent(b),0));
 return '<div class="page-head"><div><h1>Gastos fijos</h1><p class="muted">Todos tus compromisos recurrentes, en un solo lugar.</p></div><button class="btn primary" data-act="bill-new">+ Nuevo cargo fijo</button></div>'
 +'<div class="grid stats">'+stat('Gastos fijos / mes',money(total),'Equivalente mensual')+stat('Ingresos recurrentes',money(monthlyIncome),'Solo previstos')+stat('Compromisos activos',active.length,'Sin registrar cargos automáticos')+stat('Balance comprometido',money(monthlyIncome-total),'Sin incluir compras variables')+'</div>'
-+'<div class="notice warn">⚠️ Un gasto fijo programado NO modifica tu deuda ni crea un movimiento bancario. “Confirmar realizado” solo marca el compromiso como revisado; si quieres cambiar el saldo de una tarjeta o cuenta, registra su compra o pago en <b>Movimientos</b>. La automatización quedará pendiente de definir.</div>'
++'<div class="notice warn">⚠️ Un gasto fijo programado NO modifica tu deuda ni crea un movimiento bancario. Ahora debes verificar el cobro y presionar <b>Revisar y registrar</b> para confirmar un movimiento en la tarjeta elegida. Una fecha pendiente nunca cambia tus saldos por sí sola.</div>'
++'<div id="recurring-pending"></div>'+recurringReviewPanel(ctx)
 +box('Pagos y suscripciones',expenses.length?expenses.map(b=>details(b,ctx)).join(''):'<p class="muted">No tienes pagos recurrentes aún. Puedes agregar renta, servicios, internet, streaming o mensualidades.</p>')
 +(income.length?box('Ingresos fijos previstos',income.map(b=>details(b,ctx)).join('')):'')
 +box('¿Qué cuenta como gasto fijo?','<p class="muted small">Servicios, renta, internet, suscripciones o cualquier compromiso periódico. Si agregas aquí la mensualidad de un préstamo que ya está registrado en Créditos, recuerda que aparecerá en ambas listas; no la sumes dos veces al planear tus pagos.</p>');
@@ -94,7 +96,7 @@ export function openBillForm(ctx,id=null){
  +c('account_id','Cuenta de referencia (opcional)',[['','Sin asignar'],...ctx.state.accounts.map(a=>[a.id,a.name])],b?.account_id||'',true)
  +c('active','Estado',[['true','Activo'],['false','Pausado']],String(b?.active??true))
  +f('notes','Notas','text',b?.notes||'','',true)
- +'<div class="notice warn full-span">Solo agenda y suma el gasto. No cargará ni pagará automáticamente: confirma primero si ocurrió y registra cualquier movimiento real por separado.</div>';
+ +'<div class="notice warn full-span">El compromiso no afecta saldos. Tras verificar un cobro en el banco, utiliza “Revisar y registrar” para contabilizarlo una sola vez.</div>';
  ctx.modalOpen(b?'Editar gasto fijo':'Nuevo gasto fijo','recurring_bills',html,id);
 }
 export function openBudgetForm(ctx,id=null){
@@ -105,7 +107,9 @@ export function openBudgetForm(ctx,id=null){
  ctx.modalOpen(b?'Editar límite':'Nuevo presupuesto','budgets',html,id);
 }
 export async function extraAction(b,ctx){
+ if(await recurringAction(b,ctx))return true;
  const act=b.dataset.act,id=b.dataset.id;
+ if(act==='bill-pending'){document.getElementById('recurring-pending')?.scrollIntoView({behavior:'smooth'});return true}
  if(act==='bill-new'){openBillForm(ctx);return true}
  if(act==='bill-edit'){openBillForm(ctx,id);return true}
  if(act==='budget-new'){openBudgetForm(ctx);return true}
@@ -114,7 +118,7 @@ export async function extraAction(b,ctx){
  if(act==='budget-next'||act==='budget-back'){budgetMonth=addMonths(budgetMonth||ctx.thisMonth(),act==='budget-next'?1:-1);ctx.render();return true}
  if(act==='loan-amort'){selectedLoan=id;ctx.setPage('amortization');return true}
  if(act==='bill-delete'||act==='budget-delete'){if(!confirm('¿Eliminar este registro programado? No afecta movimientos bancarios.'))return true;try{await ctx.remove(act==='bill-delete'?'recurring_bills':'budgets',id);ctx.render();ctx.toast('Registro eliminado.')}catch(e){ctx.toast(e.message,true)}return true}
- if(act==='bill-check'){try{const exists=ctx.state.recurring_checks.some(x=>x.bill_id===id&&x.occurrence_date===b.dataset.date);if(exists){ctx.toast('Este compromiso ya está confirmado.');return true}
+ 
  await ctx.persist('recurring_checks',{bill_id:id,occurrence_date:b.dataset.date,note:'Confirmación manual, sin alterar saldos'});ctx.render();ctx.toast('Marcado como realizado. Para actualizar el saldo, registra el movimiento real.')}catch(e){ctx.toast(e.message,true)}return true}
  if(act==='notification-enable'){
   if(!('Notification' in window)){ctx.toast('Este navegador no admite notificaciones web.',true);return true}
