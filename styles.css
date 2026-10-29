@@ -30,3 +30,49 @@
  .wizard-controls{flex-wrap:wrap}
  .wizard-controls .btn{flex:1}
 }
+
+/* Brújula v1.5 · Gastos fijos, presupuestos, calendario e importación */
+.feature-panel{margin-top:16px}
+.feature-panel h3{margin-bottom:16px}
+.feature-list-row{display:flex;justify-content:space-between;gap:20px;align-items:center;
+ border-bottom:1px solid #eef0f5;padding:14px 0}
+.feature-list-row:last-of-type{border-bottom:0}
+.feature-list-row strong,.feature-list-row b{overflow-wrap:anywhere}
+.feature-list-row small{display:block;color:#8894a6;font-size:.76rem;margin-top:5px}
+.feature-actions{text-align:right}
+.feature-actions .inline-actions{justify-content:flex-end;margin-top:7px}
+.feature-actions button{font-size:.69rem}
+.row-title{display:flex;justify-content:space-between;gap:8px;margin-bottom:9px}
+.budget-row{margin:16px 0;padding-bottom:15px;border-bottom:1px solid #eef0f5}
+.budget-meter{height:10px;background:#e9edf6;border-radius:20px;overflow:hidden}
+.budget-meter i{height:100%;display:block;border-radius:20px}
+.budget-row .inline-actions{margin-top:10px;align-items:center;justify-content:space-between}
+.feature-cal-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;text-transform:capitalize}
+.feature-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.feature-calendar .weekday{text-align:center;font-size:.74rem;color:#7f8b9c;font-weight:700}
+.calendar-day{min-height:88px;padding:7px;border:1px solid #ebedf4;border-radius:9px;background:white;min-width:0}
+.calendar-day.is-outside{opacity:.4}
+.calendar-day.has-bill{background:#f1f0ff;border-color:#d9d6fb}
+.calendar-day>b{font-size:.8rem}
+.calendar-day small{display:block;font-size:.65rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#4e54a1;margin-top:5px}
+.import-controls{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.import-table td{padding:10px 6px}
+.import-table input,.import-table select{padding:8px 6px;border:1px solid #dce2ed;border-radius:8px;background:white;min-width:120px;max-width:230px;font-size:.8rem;color:#17233e}
+.import-table .import-select{min-width:18px}
+.import-table td:first-child{white-space:normal;max-width:150px}
+.import-table small{font-size:.65rem;display:block;color:#7c879b;max-width:120px}
+.import-actions{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:20px}
+.sidebar{overflow-y:auto}
+.bottom-nav{overflow-x:auto;scrollbar-width:thin;justify-content:flex-start;gap:8px}
+.bottom-nav button{flex:0 0 58px}
+@media(max-width:700px){
+ .feature-list-row{align-items:flex-start;flex-direction:column;gap:8px}
+ .feature-actions{text-align:left}
+ .feature-actions .inline-actions{justify-content:flex-start}
+ .feature-calendar{gap:2px}
+ .calendar-day{min-height:69px;padding:3px;border-radius:5px}
+ .calendar-day small{font-size:.56rem}
+ .import-controls{grid-template-columns:1fr}
+ .import-actions{flex-direction:column;align-items:stretch}
+ .import-actions .btn{white-space:normal}
+}
