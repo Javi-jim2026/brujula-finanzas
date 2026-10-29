@@ -47,6 +47,15 @@ try{
  if(!await budgetPanel.innerText().then(t=>t.includes('Semana siguiente')))throw Error('No cambia la semana de pagos.');
  await page.locator('[data-act="cash-cycle-next"]').click();
  if(!await budgetPanel.innerText().then(t=>t.includes('Próxima quincena')))throw Error('No cambia la quincena de nómina.');
+ await page.locator('#mobile-nav [data-page="installments"]').click();
+ const planButton=page.locator('[data-act="msi-link"]').first();
+ if(await planButton.count()!==1)throw Error('No aparece el botón de vincular pagos MSI.');
+ await planButton.click();
+ if(await page.locator('#modal-form').getAttribute('data-table')!=='msi_link')throw Error('No abrió el formulario de vinculación MSI.');
+ if(await page.locator('[name="payment_mode"]').inputValue()!=='new')throw Error('En demo sin pagos previos debe proponer un pago nuevo.');
+ await page.locator('#modal-form [type="submit"]').click();
+ await page.waitForTimeout(100);
+ if(!await page.locator('#content').innerText().then(t=>t.includes('2 de 9 mensualidades pagadas')&&t.includes('Mensualidad 2 de 9')))throw Error('Vincular MSI no actualizó el historial y contador.');
  await page.locator('#quick-add').click();
  if(await page.locator('#modal').isHidden())throw Error('Registrar movimiento no abre formulario. '+JSON.stringify(errors));
  await page.locator('#close-modal').click();
