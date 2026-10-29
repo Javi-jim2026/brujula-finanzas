@@ -55,7 +55,7 @@ try{
  if(await page.locator('[name="payment_mode"]').inputValue()!=='new')throw Error('En demo sin pagos previos debe proponer un pago nuevo.');
  await page.locator('#modal-form [type="submit"]').click();
  await page.waitForTimeout(100);
- if(!await page.locator('#content').innerText().then(t=>t.includes('2 de 9 mensualidades pagadas')&&t.includes('Mensualidad 2 de 9')))throw Error('Vincular MSI no actualizó el historial y contador.');
+ if(!await page.locator('#content').innerText().then(t=>t.includes('2 de 9 mensualidades pagadas')&&t.includes('Ver pagos MSI vinculados (1)')))throw Error('Vincular MSI no actualizó el historial y contador. Vista='+JSON.stringify((await page.locator('#content').innerText()).slice(0,2300))+'; modal='+await page.locator('#modal').getAttribute('class')+'; aviso='+await page.locator('#toast').innerText()+'; errors='+JSON.stringify(errors));
  await page.locator('#quick-add').click();
  if(await page.locator('#modal').isHidden())throw Error('Registrar movimiento no abre formulario. '+JSON.stringify(errors));
  await page.locator('#close-modal').click();
