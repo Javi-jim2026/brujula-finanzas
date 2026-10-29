@@ -14,8 +14,11 @@ const totals=(plan,liquid)=>'<div class="grid stats">'+
  stat('Ingresos previstos',plan.incomePlanned,'No sumados al dinero líquido')+'</div>';
 function details(items){
  const rows=items.filter(e=>e.flow==='outflow');
- if(!rows.length)return '<p class="muted small">No hay vencimientos registrados en este periodo. Confirma que capturaste los pagos que realizas semanal o quincenalmente.</p>';
- return rows.map(e=>'<div class="feature-list-row"><div><strong>'+safe(e.label||'Compromiso')+'</strong><small>Vence '+dateStr(e.date)+' · '+safe(e.note||'')+'</small></div><b>'+fmt(e.amount)+'</b></div>').join('');
+ const informational=items.filter(e=>e.flow!=='outflow');
+ const itemRow=e=>'<div class="feature-list-row"><div><strong>'+safe(e.label||'Compromiso')+'</strong><small>'+dateStr(e.date)+' · '+safe(e.note||'')+'</small></div><b>'+fmt(e.amount)+'</b></div>';
+ const payable=rows.length?rows.map(itemRow).join(''):'<p class="muted small">No hay vencimientos de pago registrados en este periodo. Confirma que capturaste todos tus compromisos.</p>';
+ const extra=informational.length?'<details class="cash-extra"><summary>Otros movimientos previstos (no se restan como pagos)</summary>'+informational.map(itemRow).join('')+'</details>':'';
+ return payable+extra;
 }
 function caveats(plan){
  let notes=[];
