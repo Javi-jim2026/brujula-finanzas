@@ -119,7 +119,6 @@ export async function extraAction(b,ctx){
  if(act==='loan-amort'){selectedLoan=id;ctx.setPage('amortization');return true}
  if(act==='bill-delete'||act==='budget-delete'){if(!confirm('¿Eliminar este registro programado? No afecta movimientos bancarios.'))return true;try{await ctx.remove(act==='bill-delete'?'recurring_bills':'budgets',id);ctx.render();ctx.toast('Registro eliminado.')}catch(e){ctx.toast(e.message,true)}return true}
  
- await ctx.persist('recurring_checks',{bill_id:id,occurrence_date:b.dataset.date,note:'Confirmación manual, sin alterar saldos'});ctx.render();ctx.toast('Marcado como realizado. Para actualizar el saldo, registra el movimiento real.')}catch(e){ctx.toast(e.message,true)}return true}
  if(act==='notification-enable'){
   if(!('Notification' in window)){ctx.toast('Este navegador no admite notificaciones web.',true);return true}
   try{const p=await Notification.requestPermission();ctx.toast(p==='granted'?'Avisos permitidos al abrir Brújula.':'No se habilitaron avisos.');ctx.render()}catch(e){ctx.toast('No se pudo activar: '+e.message,true)}return true
