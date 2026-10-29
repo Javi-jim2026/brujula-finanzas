@@ -52,7 +52,7 @@ test('No contar dos veces compromiso de préstamo que también se registró como
  const data={...state,recurring_bills:[{id:'auto-fijo',name:'Pago crédito auto',amount:900,active:true,frequency:'monthly',next_date:'2026-11-04',due_day:4,direction:'expense'}],
  loans:[{...state.loans[0],payroll_deduction:false}]};
  const plan=paymentPlan(data,'2026-11-01','2026-11-07');
- assert.equal(plan.required,900);
+ assert.equal(plan.required,1900); // préstamo 900 + corte bancario pendiente de 1000
  assert.equal(plan.duplicates.length,1);
 });
 test('Panel de resumen de nómina muestra fechas, totales y pagos sin escribir datos',()=>{
