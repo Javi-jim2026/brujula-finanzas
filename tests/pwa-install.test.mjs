@@ -11,21 +11,23 @@ test('Manifiesto PWA abre dentro del ámbito como aplicación independiente',()=
  assert.ok(m.icons.some(i=>i.sizes==='192x192'));
  assert.ok(m.icons.some(i=>i.sizes==='512x512'));
 });
-test('Android registra Service Worker temprano y muestra instalador verificado',()=>{
- const html=read('index.html');
+test('Android registra Service Worker temprano y muestra un único instalador',()=>{
+ const html=read('index.html'),app=read('app.js'),helper=read('install-app.mjs');
  assert.match(html,/rel="manifest"/);
  assert.match(html,/navigator\.serviceWorker\.register\("\.\/sw\.js"\)/);
- assert.match(html,/src="install-helper\.mjs"/);
- const helper=read('install-helper.mjs');
+ assert.match(html,/data-install-brujula/);
+ assert.doesNotMatch(html,/src="install-helper\.mjs"/);
+ assert.match(app,/setupInstallSupport\(\)/);
  assert.match(helper,/beforeinstallprompt/);
  assert.match(helper,/display-mode: standalone/);
  assert.match(helper,/appinstalled/);
  assert.match(helper,/Instalar Brújula/);
  assert.match(helper,/Crear acceso directo/);
 });
-test('Cache incluye archivo instalador y script de manifest, sin cachear Supabase',()=>{
+test('La caché incluye instalador, pero no datos bancarios',()=>{
  const sw=read('sw.js');
- assert.ok(sw.includes("'./install-helper.mjs'"));
- assert.ok(sw.includes("'install-helper.mjs'"));
+ assert.ok(sw.includes("'./install-app.mjs'"));
+ assert.ok(sw.includes("'install-app.mjs'"));
  assert.ok(sw.includes('url.origin !== self.location.origin'));
+ assert.ok(!sw.includes('supabase.co'));
 });
