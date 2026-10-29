@@ -1,4 +1,4 @@
-# Brújula Finanzas · v1.6
+# Brújula Finanzas · v1.8
 
 Aplicación personal de control de tarjetas, meses sin intereses, movimientos, estados de cuenta, efectivo y créditos. **Proyecto independiente de SUDMAR.**
 
@@ -78,3 +78,11 @@ No hay datos bancarios reales en este repositorio. La aplicación requiere inter
 - **Detalle por cuenta**: botón **Ver movimientos** desde resumen, tarjetas y tabla; muestra el historial exclusivo de esa tarjeta, métricas de deuda/disponible, sumas de pagos/compras, filtros Todos/Compras/Pagos/Otros y paginación de 20. Desde allí se puede capturar un pago o compra con la tarjeta seleccionada.
 - Todos los cambios de base son aditivos. No se modificaron tarjetas, movimientos ni saldos existentes al desplegar.
 - GitHub Pages verifica sintaxis y pruebas de aislamiento por cuenta, cálculo de recurrentes y no duplicación antes de publicar. Probar en Android con datos ficticios antes de registrar cargos reales.
+
+## Recuperación de acceso (v1.8)
+- En inicio de sesión: **¿Olvidaste tu contraseña?** → escribe el correo → Supabase Auth envía un correo de recuperación.
+- El enlace regresa a `https://javi-jim2026.github.io/brujula-finanzas/`. En la PWA se atiende el evento Supabase `PASSWORD_RECOVERY` y se muestra un formulario para establecer una contraseña nueva (mínimo ocho caracteres y confirmación).
+- El enlace debe estar validado por Supabase; sin sesión de recuperación no se puede guardar una nueva contraseña. Después del cambio se elimina la URL con tokens y se cierra la sesión local, para que el propietario entre con sus datos nuevos.
+- **Configuración manual indispensable en Supabase, si no se ha establecido antes**: abre https://supabase.com/dashboard/project/krilcvtobjzffffleebb/auth/url-configuration, cambia **Site URL** a `https://javi-jim2026.github.io/brujula-finanzas/`, agrega el mismo valor en **Redirect URLs** y guarda. El conector Supabase actual no permite modificar esa configuración. Si aún aparece `localhost:3000` al abrir el correo, revisa este paso.
+- Nunca se muestra ni almacena la contraseña en el repositorio ni en las tablas financieras. No se restablece la cuenta de forma automática: el usuario debe solicitar el correo, abrir el enlace y elegir su propia contraseña.
+- Se publican pruebas unitarias de validación de la contraseña, reconocimiento del enlace y aislamiento del flujo respecto a movimientos financieros.
