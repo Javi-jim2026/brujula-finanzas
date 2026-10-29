@@ -43,7 +43,7 @@ try{
  await page.locator('#quick-add').click();
  if(await page.locator('#modal').isHidden())throw Error('Registrar movimiento no abre formulario. '+JSON.stringify(errors));
  await page.locator('#close-modal').click();
- await page.locator('[data-page="accounts"]').first().click();
+ await page.locator('#mobile-nav [data-page="accounts"]').click();
  if(!await page.locator('#content').innerText().then(t=>t.includes('Cuentas y tarjetas')))throw Error('La navegación a tarjetas falló.');
  if(errors.some(e=>/pageerror|request:/.test(e)))throw Error('Errores JavaScript: '+JSON.stringify(errors));
  console.log('BROWSER SMOKE OK: recuperar, instalar, demo, registrar, navegación');
