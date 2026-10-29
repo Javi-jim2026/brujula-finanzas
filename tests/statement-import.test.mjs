@@ -19,6 +19,6 @@ test('Los gastos de débito usan tipo gasto e ingreso',()=>{
  assert.deepEqual(items.map(x=>x.kind),['expense','income']);
 });
 test('No inventa movimientos de filas incompletas',()=>{
- const items=detectTable(csvMatrix('Fecha,Concepto,Importe\nNo es fecha,ABC,200\n23/10/2026,Abono,''),{kind:'credit'});
+ const items=detectTable(csvMatrix('Fecha,Concepto,Importe\nNo es fecha,ABC,200\n23/10/2026,Abono,'),{kind:'credit'});
  assert.equal(items.length,0);
 });
