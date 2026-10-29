@@ -21,6 +21,9 @@ try{
  browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--disable-gpu']});
  const page=await browser.newPage({viewport:{width:412,height:915}});
  const errors=[];
+ const client=await page.context().newCDPSession(page);
+ await client.send('Runtime.enable');
+ client.on('Runtime.exceptionThrown',e=>{const v=e.exceptionDetails||{};errors.push('CDP '+(v.url||v.stackTrace?.callFrames?.[0]?.url||'unknown')+':'+(Number(v.lineNumber)+1)+':'+(Number(v.columnNumber)+1)+' '+v.text+' '+(v.exception?.description||''))});
  page.on('pageerror',e=>errors.push('pageerror: '+(e.stack||e.message)));
  page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text()+' '+JSON.stringify(m.location()))});
  page.on('requestfailed',r=>{if(/\.mjs|\.js/.test(r.url())&&!r.url().includes('esm.sh'))errors.push('request: '+r.url()+' '+r.failure()?.errorText)});
