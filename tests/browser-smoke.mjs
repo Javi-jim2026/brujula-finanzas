@@ -61,6 +61,11 @@ try{
  await page.locator('#close-modal').click();
  await page.locator('#mobile-nav [data-page="accounts"]').click();
  if(!await page.locator('#content').innerText().then(t=>t.includes('Cuentas y tarjetas')))throw Error('La navegación a tarjetas falló.');
+ await page.locator('#mobile-nav [data-page="statements"]').click();
+ if(!await page.locator('#content').innerText().then(t=>t.includes('Cortes y conciliación')))throw Error('Pagos no abre Cortes y conciliación en móvil.');
+ await page.locator('[data-act="new-statement"]').click();
+ if(await page.locator('#modal-form').getAttribute('data-table')!=='statements')throw Error('Registrar estado de cuenta no abre el formulario.');
+ await page.locator('#close-modal').click();
  if(errors.some(e=>/pageerror|request:/.test(e)))throw Error('Errores JavaScript: '+JSON.stringify(errors));
  console.log('BROWSER SMOKE OK: recuperar, instalar, demo, registrar, navegación');
 }finally{await browser?.close();await new Promise(r=>server.close(r))}
