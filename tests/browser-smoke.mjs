@@ -40,6 +40,13 @@ try{
  }
  await page.locator('#demo').click();
  if(await page.locator('#shell').isHidden())throw Error('Explorar demo no muestra la aplicación. '+JSON.stringify(errors));
+ const budgetPanel=page.locator('#paycheck-panel');
+ if(await budgetPanel.count()!==1)throw Error('No aparece el nuevo panel de nómina quincenal.');
+ if(!await budgetPanel.innerText().then(t=>t.includes('Próxima nómina')))throw Error('No aparece la próxima nómina.');
+ await page.locator('[data-act="cash-week-next"]').click();
+ if(!await budgetPanel.innerText().then(t=>t.includes('Semana siguiente')))throw Error('No cambia la semana de pagos.');
+ await page.locator('[data-act="cash-cycle-next"]').click();
+ if(!await budgetPanel.innerText().then(t=>t.includes('Próxima quincena')))throw Error('No cambia la quincena de nómina.');
  await page.locator('#quick-add').click();
  if(await page.locator('#modal').isHidden())throw Error('Registrar movimiento no abre formulario. '+JSON.stringify(errors));
  await page.locator('#close-modal').click();
