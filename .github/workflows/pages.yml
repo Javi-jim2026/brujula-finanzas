@@ -37,6 +37,10 @@ jobs:
           node --check install-app.mjs
           node --check password-recovery.mjs
           node --test tests/*.test.mjs
+      - name: Probar arranque y botones en Chrome
+        run: |
+          npm install --no-save --no-audit --no-fund playwright-core@1.56.1
+          node tests/browser-smoke.mjs
       - name: Preparar únicamente archivos públicos de la aplicación
         run: |
           mkdir -p _site
