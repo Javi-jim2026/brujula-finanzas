@@ -1,4 +1,4 @@
-# Brújula Finanzas · v1.5
+# Brújula Finanzas · v1.6
 
 Aplicación personal de control de tarjetas, meses sin intereses, movimientos, estados de cuenta, efectivo y créditos. **Proyecto independiente de SUDMAR.**
 
@@ -67,3 +67,14 @@ No hay datos bancarios reales en este repositorio. La aplicación requiere inter
 5. Probar importación con CSV ficticio; validar cargo, abono y exclusión de duplicados. Solo después probar con un estado real de formato conocido.
 6. Revisar **Recordatorios** y comprobar permisos del navegador.
 7. No usar la amortización como sustituto de una tabla bancaria o financiera oficial.
+
+
+## Brújula v1.6 — recurrentes pendientes, pagos simples y expediente por tarjeta
+
+- **Opción A para cargos recurrentes**: las ocurrencias se calculan desde la agenda semanal/quincenal/mensual/anual y aparecen en **Gastos fijos → Por revisar**. Son previsiones y no alteran saldos. Tras verificar el cargo bancario, se pulsa **Revisar y registrar**, se elige cuenta/tarjeta, fecha e importe reales, y se guarda una sola vez. **No se ejecuta ningún cargo en el banco ni se registra automáticamente**. También existe **No se cobró**.
+- La función transaccional `public.confirm_recurring_posting` crea el movimiento y marca la ocurrencia como contabilizada en una operación atómica. Restricción única `(usuario, compromiso, fecha)` y comprobación de similares previenen dobles cargos. `skip_recurring_posting` deja constancia sin modificar balances.
+- Los compromisos confirmados en la versión anterior con **Confirmar realizado** siguen preservados; no se convierten retroactivamente en movimientos. Pueden aparecer como «Revisado antes, sin movimiento bancario» hasta que el usuario los confirme en el nuevo flujo.
+- **Pago a tarjeta simplificado**: al elegir ese tipo aparecen tarjeta, fecha, importe, nota opcional y vínculo opcional al corte. Se ocultan comercio y categoría. La lista de tarjetas y cortes se limita a opciones compatibles. Un pago reduce la deuda estimada, y si está vinculado a un corte también reduce su monto oficial pendiente.
+- **Detalle por cuenta**: botón **Ver movimientos** desde resumen, tarjetas y tabla; muestra el historial exclusivo de esa tarjeta, métricas de deuda/disponible, sumas de pagos/compras, filtros Todos/Compras/Pagos/Otros y paginación de 20. Desde allí se puede capturar un pago o compra con la tarjeta seleccionada.
+- Todos los cambios de base son aditivos. No se modificaron tarjetas, movimientos ni saldos existentes al desplegar.
+- GitHub Pages verifica sintaxis y pruebas de aislamiento por cuenta, cálculo de recurrentes y no duplicación antes de publicar. Probar en Android con datos ficticios antes de registrar cargos reales.
