@@ -155,3 +155,10 @@
 .cash-section .notice{margin:15px 0 0}
 .paycheck-panel .featured strong{overflow-wrap:anywhere}
 @media(max-width:700px){.cash-controls{flex-wrap:wrap;justify-content:center}.paycheck-panel{padding:17px}.cash-section .feature-list-row{align-items:flex-start}}
+
+/* Brújula 1.10 — vinculación y conciliación MSI */
+.msi-links{margin-top:14px;padding:12px 15px;border:1px solid #dfe3f0;border-radius:12px;background:#fafaff}
+.msi-links summary{font-size:.82rem;font-weight:750;cursor:pointer;color:#3d4892}
+.msi-links .feature-list-row{padding:10px 0}
+.msi-existing-fields,.msi-new-fields{display:grid;grid-template-columns:1fr;gap:12px}
+.msi-existing-fields.hidden,.msi-new-fields.hidden{display:none!important}
