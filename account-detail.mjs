@@ -1,5 +1,6 @@
 /* Brújula v1.11 · Expediente de cuenta con calendario por ciclo. */
 import {cardCycleLabel} from './cycle-ui.mjs';
+import {cardGradientStyle} from './card-colors.mjs';
 let selectedAccountId=null,filter='all',pageNumber=0;
 const PAGE_SIZE=20;
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -44,7 +45,9 @@ export function renderAccountDetails(ctx){
  '<div class="inline-actions"><button class="btn primary" data-act="account-charge" data-id="'+safe(a.id)+'">+ '+(credit?'Compra':'Gasto')+'</button>'+
  (credit?'<button class="btn soft" data-act="account-pay" data-id="'+safe(a.id)+'">+ Pago a tarjeta</button>':'')+
  '<button class="btn outline" data-act="edit-account" data-id="'+safe(a.id)+'">Editar cuenta</button>'+
+ '<button class="btn outline" data-act="card-color" data-id="'+safe(a.id)+'">🎨 Cambiar color</button>'+
  (credit?'<button class="btn outline" data-act="card-cycle" data-id="'+safe(a.id)+'">Configurar fechas de pago</button>':'')+'</div></div>'+
+ '<div class="account-color-banner" style="'+cardGradientStyle(a)+'"><span>💳 '+safe(a.name)+'</span><span>'+(a.last4?'•••• '+safe(a.last4):'Mi cuenta')+'</span></div>'+
  summary+extra+cycle+
  '<section class="panel section"><div class="section-title"><h3>Movimientos de '+safe(a.name)+' · '+entries.length+' registros</h3></div>'+
  '<div class="filterbar"><label class="field">Mostrar<select id="account-detail-kind">'+
