@@ -162,3 +162,16 @@
 .msi-links .feature-list-row{padding:10px 0}
 .msi-existing-fields,.msi-new-fields{display:grid;grid-template-columns:1fr;gap:12px}
 .msi-existing-fields.hidden,.msi-new-fields.hidden{display:none!important}
+
+/* Brújula v1.11 · Calendario de cortes y vencimientos por ciclo */
+.card-cycle-agenda .cycle-payment-list{display:grid;gap:10px;margin-top:12px}
+.cycle-payment-item{border:1px solid #e2e6ef;border-radius:13px;padding:13px;display:grid;gap:9px;background:#fff}
+.cycle-payment-item.warn{border-color:#f1d9a5;background:#fffaf0}
+.cycle-payment-main{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cycle-payment-main small{display:block;font-size:.73rem;color:#7b8799;margin-top:4px;line-height:1.4}
+.cycle-payment-amount{text-align:right;display:grid;gap:6px;justify-items:end}
+.cycle-payment-amount strong{font-size:.91rem;color:#23314b}
+.cycle-payment-tag{font-size:.67rem;padding:3px 8px;border-radius:12px;background:#edf0fa;color:#4e5d79}
+.cycle-payment-tag.cycle-estimated{background:#fff0d8;color:#795100}
+.card-cycle-agenda .linkbtn{margin:4px}
+@media(max-width:650px){.cycle-payment-main{flex-direction:column}.cycle-payment-amount{text-align:left;justify-items:start}}
