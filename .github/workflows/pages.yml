@@ -41,6 +41,7 @@ jobs:
           node --check msi-payment-link.mjs
           node --check card-cycle.mjs
           node --check cycle-ui.mjs
+          node --check card-colors.mjs
           node --test tests/*.test.mjs
       - name: Probar arranque y botones en Chrome
         run: |
@@ -49,7 +50,7 @@ jobs:
       - name: Preparar únicamente archivos públicos de la aplicación
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js finance-rules.mjs planning-rules.mjs planning-ui.mjs statement-import.mjs recurring-review.mjs account-detail.mjs install-helper.mjs install-app.mjs password-recovery.mjs payday-planning.mjs payday-panel.mjs msi-payment-link.mjs card-cycle.mjs cycle-ui.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
+          cp index.html styles.css app.js finance-rules.mjs planning-rules.mjs planning-ui.mjs statement-import.mjs recurring-review.mjs account-detail.mjs install-helper.mjs install-app.mjs password-recovery.mjs payday-planning.mjs payday-panel.mjs msi-payment-link.mjs card-cycle.mjs cycle-ui.mjs card-colors.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
       - name: Empaquetar sitio
         uses: actions/upload-pages-artifact@v3
         with:
