@@ -1,5 +1,6 @@
 /* Brújula v1.9. Control quincenal 15/30. Proyecciones, no cargo ni abono automático. */
 import {addDays,addMonths,monthlyDate,dueEvents,cash} from './planning-rules.mjs';
+import {upcomingCardPayments} from './card-cycle.mjs';
 export const MX_PAYDAYS=[15,30];
 export function payDate(month,day){if(day!==15&&day!==30)throw Error('El día de nómina debe ser 15 o 30');return monthlyDate(month,day)}
 export function paySchedule(anchor,monthRange=3){
@@ -79,10 +80,24 @@ export function paymentPlan(state,from,to,{today=from}={}){
    all.push({...e,flow:'outflow',note:'Importe pendiente del estado de cuenta bancario'});
   }
  }
+ const cardForecasts=upcomingCardPayments(state,today).filter(e=>e.source==='estimated'&&e.date<=to&&e.latestDate>=from);
+ // Historical official obligations: include only latest overdue statement per account.
+ if(from<=today&&to>=today){
+  const lastOverdue=new Map();
+  for(const p of upcomingCardPayments(state,today)){
+   if(p.source!=='official'||p.date>=today||p.amount<=0)continue;
+   const prev=lastOverdue.get(p.account_id);
+   if(!prev||p.closeDate>prev.closeDate)lastOverdue.set(p.account_id,p);
+  }
+  for(const p of lastOverdue.values())if(!statements.has(p.statementId)){
+   all.push({date:p.date,type:'statement_overdue',id:p.statementId,amount:p.amount,
+    label:'Tarjeta vencida · '+p.accountName,flow:'outflow',note:'Pago oficial vencido sin abono vinculado; verificar con el banco'});
+  }
+ }
  const payable=all.filter(e=>e.flow==='outflow');
  const income=all.filter(e=>e.flow==='income');
  const sum=x=>cash(x.reduce((n,e)=>n+Number(e.amount),0));
- return {items:all,payable,required:sum(payable),incomePlanned:sum(income),
+ return {items:all,payable,cardForecasts,required:sum(payable),incomePlanned:sum(income),
    creditCharges:sum(all.filter(e=>e.flow==='credit_charge')),
    payrollDeductions:sum(all.filter(e=>e.flow==='payroll')),
    duplicates:all.filter(e=>e.flow==='duplicate')};
