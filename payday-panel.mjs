@@ -42,6 +42,9 @@ export function renderPaydayPanel(ctx){
  const planWeek=paymentPlan(ctx.state,week.start,week.end,{today:current});
  const {liquid,cards,credit}=summary;
  const creditCount=ctx.state.accounts.filter(a=>a.kind==='credit'&&a.active!==false).length;
+ const forecastTip=plan=>plan.cardForecasts?.length?'<div class="notice warn"><b>Fechas de pago estimadas; importe aún desconocido:</b> '+
+ plan.cardForecasts.map(e=>safe(e.accountName)+' · '+dateStr(e.date)+(e.latestDate!==e.date?' a '+dateStr(e.latestDate):'')).join(' · ')+
+ '. Confirma fecha e importe oficial en el banco. No se sumaron montos desconocidos al total.</div>':'';
  const missing=ctx.state.accounts.filter(a=>a.kind==='credit'&&!a.opening_balance_date).length;
  return '<section class="panel section paycheck-panel" id="paycheck-panel">'+
   heading('💰 Mi dinero entre nóminas',cycle.start,cycle.end,cycle.nextPayday)+
@@ -56,9 +59,9 @@ export function renderPaydayPanel(ctx){
    'te faltarían '+fmt(-summary.beforePayDifference)+' para los pagos registrados.':'te quedarían '+fmt(summary.beforePayDifference)+' después de los pagos registrados.')+
    ' No considera ingresos futuros, gastos ocasionales ni movimientos no capturados.</div>'+
   '<div class="cash-section">'+selector('cycle',cycleOffset)+heading(cycleOffset===0?'Pagos hasta la próxima nómina':'Pagos de la siguiente quincena',cycleFrom,cycle.end,cycle.nextPayday)+
-    totals(planCycle,liquid)+details(planCycle.items)+caveats(planCycle)+'</div>'+
+    totals(planCycle,liquid)+forecastTip(planCycle)+details(planCycle.items)+caveats(planCycle)+'</div>'+
   '<div class="cash-section">'+selector('week',weekOffset)+heading(weekOffset===0?'Pagos de los próximos siete días':'Pagos de los siguientes siete días',week.start,week.end)+
-    totals(planWeek,liquid)+details(planWeek.items)+caveats(planWeek)+'</div>'+
+    totals(planWeek,liquid)+forecastTip(planWeek)+details(planWeek.items)+caveats(planWeek)+'</div>'+
   (missing?'<div class="notice warn">'+missing+' tarjeta(s) todavía sin fecha de saldo inicial; revisa sus saldos para mejorar la estimación.</div>':'')+
   '<p class="tip">Los MSI históricos no se suman otra vez: la obligación de tarjeta se basa en el estado de cuenta oficial. Los gastos fijos cargados a crédito se muestran aparte porque no salen de tu dinero líquido al momento de la compra. Los pagos de préstamos descontados de nómina tampoco se restan dos veces. El total solo será confiable si capturas tus compromisos y marcas sus pagos realizados.</p>'+
  '</section>';
