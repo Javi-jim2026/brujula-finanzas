@@ -39,7 +39,7 @@ test('Corte real manda sobre pronóstico y solo sus pagos vinculados reducen deu
  assert.equal(p.source,'official');
  assert.equal(p.date,'2026-11-06');
  assert.equal(p.amount,800);
- assert.equal(p.key,'soon');
+ assert.equal(p.key,'scheduled'); // Nov 6 está a ocho días del 29 de octubre
  const altered={...paid,movements:[...paid.movements,{id:'p2',account_id:'stori',kind:'payment',amount:400}]};
  assert.equal(cardPaymentPreview(altered,stori,today).amount,800);
  const complete={...paid,movements:[...paid.movements,{id:'p3',account_id:'stori',kind:'payment',statement_id:'close1',amount:800}]};
