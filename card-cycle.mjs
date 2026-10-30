@@ -75,6 +75,6 @@ export function upcomingCardPayments(state,today){
 export function cardPaymentPreview(state,card,today){
  const items=cardPaymentTimeline(card,state.statements||[],state.movements||[],today);
  const pending=items.filter(x=>x.source==='official'&&x.amount>0&&x.date<today);
- const future=items.filter(x=>x.date>=today);
+ const future=items.filter(x=>x.date>=today&&(x.source!=='official'||x.amount>0));
  return pending[0]||future[0]||null;
 }
