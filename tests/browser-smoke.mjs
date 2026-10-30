@@ -61,6 +61,22 @@ try{
  await page.locator('#close-modal').click();
  await page.locator('#mobile-nav [data-page="accounts"]').click();
  if(!await page.locator('#content').innerText().then(t=>t.includes('Cuentas y tarjetas')))throw Error('La navegación a tarjetas falló.');
+ const cardBefore=await page.locator('.account-cards .bank-card').first().getAttribute('style');
+ if(!cardBefore?.includes('--card-from:'))throw Error('Falta el fondo de color en las tarjetas.');
+ await page.locator('.account-cards .bank-card [data-act="card-color"]').first().click();
+ if(await page.locator('#modal-form').getAttribute('data-table')!=='card_color')throw Error('No se abre el editor de colores.');
+ if(await page.locator('#modal-form [name="card_color"]').count()!==12)throw Error('Faltan colores en el editor.');
+ await page.locator('#modal-form input[name="card_color"][value="red"]').check();
+ if(!await page.locator('#card-color-preview').getAttribute('style').then(s=>s.includes('--card-from: #8f1e37')||s.includes('--card-from:#8f1e37')))throw Error('La vista previa no cambia de color.');
+ await page.locator('#modal-form button[type="submit"]').click();
+ if(!await page.locator('#modal').isHidden())throw Error('No se guardó el color.');
+ if(!await page.locator('.account-cards .bank-card').first().getAttribute('style').then(s=>s.includes('--card-from:#8f1e37')))throw Error('El color no persiste al cerrar la ventana.');
+ await page.locator('.account-cards .bank-card [data-act="view-account"]').first().click();
+ if(!await page.locator('.account-color-banner').getAttribute('style').then(s=>s.includes('--card-from:#8f1e37')))throw Error('Color no aparece en expediente.');
+ await page.locator('[data-act="account-back"]').click();
+ await page.locator('#mobile-nav [data-page="dashboard"]').click();
+ if(!await page.locator('.tile-icon-card').first().getAttribute('style').then(s=>s.includes('--card-from:#8f1e37')))throw Error('Resumen no refleja el color.');
+
  await page.locator('#mobile-nav [data-page="statements"]').click();
  if(!await page.locator('#content').innerText().then(t=>t.includes('Cortes y conciliación')))throw Error('Pagos no abre Cortes y conciliación en móvil.');
  const cycleConfigure=page.locator('#cycle-agenda [data-act="card-cycle"]').first();
@@ -78,5 +94,5 @@ try{
  if(await page.locator('#modal-form').getAttribute('data-table')!=='statements')throw Error('Registrar estado de cuenta no abre el formulario.');
  await page.locator('#close-modal').click();
  if(errors.some(e=>/pageerror|request:/.test(e)))throw Error('Errores JavaScript: '+JSON.stringify(errors));
- console.log('BROWSER SMOKE OK: recuperar, instalar, demo, registrar, navegación');
+ console.log('BROWSER SMOKE OK: recuperar, instalar, demo, registrar, ciclos, colores y navegación');
 }finally{await browser?.close();await new Promise(r=>server.close(r))}
