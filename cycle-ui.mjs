@@ -45,11 +45,16 @@ export function openCycleSettings(ctx,id){
  const account=ctx.state.accounts.find(a=>a.id===id&&a.kind==='credit');
  if(!account)return ctx.toast('Selecciona una tarjeta de crédito.',true);
  const needsOffset=account.due_month_offset===null||account.due_month_offset===undefined;
+ // Reglas precargadas de los ejemplos del usuario; nunca se guardan sin confirmar.
+ const example=/stori/i.test(account.name)?{cutoff:12,due:4,window:0}:/plata/i.test(account.name)?{cutoff:5,due:5,window:1}:null;
+ const defaultCut=account.cutoff_day??example?.cutoff??'';
+ const defaultDue=account.due_day??example?.due??'';
+ const defaultWindow=account.due_month_offset==null&&example?example.window:account.due_window_days??0;
  const text='<div class="notice full-span">💳 <b>'+safe(account.name)+'</b>. Configura la regla de calendario <b>sin cambiar la deuda, el disponible o el último estado de cuenta</b>. El cálculo de las fechas es orientativo: el banco puede mover los días por su propio calendario.</div>'+
- ctx.field('cutoff_day','Día habitual del corte (1 a 28)','number',account.cutoff_day??'','min="1" max="28" required')+
- ctx.field('due_day','Primer día habitual de vencimiento (1 a 28)','number',account.due_day??'','min="1" max="28" required')+
+ ctx.field('cutoff_day','Día habitual del corte (1 a 28)','number',defaultCut,'min="1" max="28" required')+
+ ctx.field('due_day','Primer día habitual de vencimiento (1 a 28)','number',defaultDue,'min="1" max="28" required')+
  ctx.choose('due_month_offset','¿En qué mes corresponde pagar el corte?',[['0','En el mismo mes del corte'],['1','En el siguiente mes'],['2','Dos meses después']],needsOffset?'1':String(account.due_month_offset),true)+
- ctx.choose('due_window_days','Variación aproximada del vencimiento',[['0','Fecha habitual fija (0 días)'],['1','Puede cambiar 1 día después'],['2','Puede cambiar hasta 2 días después'],['3','Puede cambiar hasta 3 días después']],String(account.due_window_days??0),true)+
+ ctx.choose('due_window_days','Variación aproximada del vencimiento',[['0','Fecha habitual fija (0 días)'],['1','Puede cambiar 1 día después'],['2','Puede cambiar hasta 2 días después'],['3','Puede cambiar hasta 3 días después']],String(defaultWindow),true)+
  '<p class="tip full-span">Ejemplos: 12 de octubre → 4 de noviembre = siguiente mes, día 4. Corte 5 de octubre → fecha 5 o 6 de noviembre = siguiente mes, día 5, variación de 1 día. No significa que el banco haya confirmado el pago o su importe.</p>'+
  '<input type="hidden" name="account_id" value="'+safe(account.id)+'">';
  ctx.modalOpen('Configurar corte y vencimiento · '+account.name,'card_cycle',text);
