@@ -1,4 +1,5 @@
-/* Brújula v1.6 · Expediente de tarjeta/cuenta: cada cuenta con historial propio. */
+/* Brújula v1.11 · Expediente de cuenta con calendario por ciclo. */
+import {cardCycleLabel} from './cycle-ui.mjs';
 let selectedAccountId=null,filter='all',pageNumber=0;
 const PAGE_SIZE=20;
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -32,6 +33,7 @@ export function renderAccountDetails(ctx){
   '<div><b>Límite:</b> '+mx(a.credit_limit)+' · <b>Inicio:</b> '+(a.opening_balance_date?fmt(a.opening_balance_date):'Fecha pendiente')+' · <b>Corte habitual:</b> '+(a.cutoff_day||'Por confirmar')+'</div>'+
   (stmt?'<div><b>Último corte:</b> '+fmt(stmt.close_date)+' · <b>Límite de pago:</b> '+fmt(stmt.due_date)+' · <b>Pago oficial pendiente:</b> '+mx(ctx.pendingStatement(stmt))+'</div>':'<div>Sin estado de cuenta registrado; el pago para no generar intereses no puede inferirse.</div>')+
   '</div>':'';
+ const cycle=credit?cardCycleLabel(ctx.state,a,ctx.dateToday()):'';
  const rows=movements.length?movements.map(m=>
    '<tr><td>'+fmt(m.transaction_date)+'</td><td><b>'+safe(m.description||m.merchant||ctx.kinds[m.kind]||'Movimiento')+'</b>'+
    (m.statement_id?'<small class="muted"> · Vinculado al corte</small>':'')+'</td><td>'+safe(ctx.kinds[m.kind]||m.kind)+'</td>'+
@@ -41,8 +43,9 @@ export function renderAccountDetails(ctx){
  return '<div class="page-head"><div><button class="linkbtn" data-act="account-back">← Mis cuentas y tarjetas</button><h1>'+safe(a.name)+'</h1><p class="muted">'+safe(a.bank_name||'')+(a.last4?' · •••• '+safe(a.last4):'')+' · '+(credit?'Tarjeta de crédito':a.kind==='debit'?'Cuenta de débito':'Efectivo')+'</p></div>'+
  '<div class="inline-actions"><button class="btn primary" data-act="account-charge" data-id="'+safe(a.id)+'">+ '+(credit?'Compra':'Gasto')+'</button>'+
  (credit?'<button class="btn soft" data-act="account-pay" data-id="'+safe(a.id)+'">+ Pago a tarjeta</button>':'')+
- '<button class="btn outline" data-act="edit-account" data-id="'+safe(a.id)+'">Editar cuenta</button></div></div>'+
- summary+extra+
+ '<button class="btn outline" data-act="edit-account" data-id="'+safe(a.id)+'">Editar cuenta</button>'+
+ (credit?'<button class="btn outline" data-act="card-cycle" data-id="'+safe(a.id)+'">Configurar fechas de pago</button>':'')+'</div></div>'+
+ summary+extra+cycle+
  '<section class="panel section"><div class="section-title"><h3>Movimientos de '+safe(a.name)+' · '+entries.length+' registros</h3></div>'+
  '<div class="filterbar"><label class="field">Mostrar<select id="account-detail-kind">'+
  [['all','Todos'],['charges','Compras y cargos'],['payments','Pagos a tarjeta'],['other','Abonos y otros']].map(([v,l])=>'<option value="'+v+'" '+(filter===v?'selected':'')+'>'+l+'</option>').join('')+
