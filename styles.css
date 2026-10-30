@@ -175,3 +175,58 @@
 .cycle-payment-tag.cycle-estimated{background:#fff0d8;color:#795100}
 .card-cycle-agenda .linkbtn{margin:4px}
 @media(max-width:650px){.cycle-payment-main{flex-direction:column}.cycle-payment-amount{text-align:left;justify-items:start}}
+
+/* Brújula v1.12 · Color por tarjeta (paleta segura) */
+.account-cards .bank-card{
+ background:linear-gradient(130deg,var(--card-from,#172640),var(--card-to,#344c73));
+ color:#fff;
+ border:1px solid rgba(255,255,255,.14);
+ box-shadow:0 12px 24px rgba(20,36,70,.14);
+}
+.account-cards .bank-card .bank-top{gap:12px}
+.account-cards .bank-card .bank-top span{overflow-wrap:anywhere}
+.account-cards .bank-card .bottom{opacity:1;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.account-cards .bank-card .bottom>span{opacity:.90;line-height:1.6;flex:1 1 170px}
+.account-cards .bank-card .btn-mini{
+ background:rgba(255,255,255,.17);border:1px solid rgba(255,255,255,.34);
+ color:white;box-shadow:none;
+}
+.account-cards .bank-card .btn-mini:hover,.account-cards .bank-card .btn-mini:focus-visible{
+ background:rgba(255,255,255,.27);outline-offset:3px
+}
+.tile-icon-card{background:linear-gradient(130deg,var(--card-from),var(--card-to))!important;color:#fff!important}
+.account-color-banner{
+ display:flex;justify-content:space-between;align-items:center;gap:12px;
+ background:linear-gradient(120deg,var(--card-from,#172640),var(--card-to,#344c73));
+ color:#fff;border-radius:14px;padding:16px 20px;margin:0 0 18px;
+ box-shadow:0 6px 17px #16223b16;font-weight:800
+}
+.account-color-banner span{overflow-wrap:anywhere}
+.account-color-banner span:last-child{font-size:.74rem;letter-spacing:.08em;opacity:.9}
+.card-color-preview{
+ background:linear-gradient(130deg,var(--card-from,#172640),var(--card-to,#344c73));
+ color:#fff;border-radius:16px;min-height:135px;
+ padding:20px;grid-column:1/-1;
+ display:flex;flex-direction:column;justify-content:space-between;
+ box-shadow:0 9px 20px #19243a21
+}
+.card-color-preview strong{letter-spacing:.16em;font-size:1.08rem}
+.card-color-preview small{opacity:.8}
+.card-color-options{
+ grid-column:1/-1;min-width:0;
+ border:1px solid #e3e6ef;border-radius:13px;padding:13px;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px
+}
+.card-color-options legend{font-weight:750;color:#40506b;font-size:.84rem;padding:0 8px}
+.card-color-choice{
+ display:flex;align-items:center;gap:8px;cursor:pointer;
+ background:#f7f8fc;border:1px solid #e3e5ed;border-radius:10px;
+ min-height:48px;padding:7px 9px;color:#3c4961;font-weight:650;font-size:.74rem
+}
+.card-color-choice:has(input:checked){border-color:#625cdb;background:#f0effe;box-shadow:0 0 0 1px #625cdb}
+.card-color-choice input{accent-color:#625cdb;width:16px;height:16px;min-width:16px;min-height:16px}
+.card-color-chip{height:23px;width:23px;min-width:23px;border-radius:7px;border:1px solid #ffffff4d}
+@media(max-width:640px){
+ .card-color-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .account-color-banner{padding:13px;align-items:flex-start;flex-direction:column}
+}
