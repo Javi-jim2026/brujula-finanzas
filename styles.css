@@ -230,3 +230,26 @@
  .card-color-options{grid-template-columns:repeat(2,minmax(0,1fr))}
  .account-color-banner{padding:13px;align-items:flex-start;flex-direction:column}
 }
+
+/* Brújula v1.13 · condiciones de operación y ciclos de corte */
+.cycle-decision-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:16px 0}
+.cycle-decision-card{border:1px solid #dfe5f0;border-radius:13px;padding:15px;background:#f9fbff;display:grid;gap:10px;min-width:0}
+.cycle-decision-card.cycle-decision-today{background:#fff7e9;border-color:#eec981}
+.cycle-decision-card.cycle-decision-past{background:#f5f3ff;border-color:#dad5fa}
+.cycle-decision-header{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.cycle-decision-header strong{color:#233b58}
+.cycle-decision-header span{color:#5a6072;font-size:.75rem;text-align:right}
+.cycle-decision-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.cycle-decision-line span{color:#63718a;font-size:.8rem}
+.cycle-decision-line b{font-size:1.06rem;color:#203452}
+.cycle-decision-card>small{color:#71809c;font-size:.74rem;line-height:1.5}
+.cycle-decision-due{border-top:1px solid #dde4ef;padding-top:10px;color:#34435f;font-size:.81rem;line-height:1.7}
+.cycle-decision-card .btn-mini{color:#4956a1;max-width:100%}
+#movement-condition{margin:0}
+#snapshot-timing-row{display:block;grid-column:1/-1;padding:12px 13px;background:#f2f4fe;border:1px solid #dde2fa;border-radius:10px}
+#snapshot-timing-row.hidden{display:none}
+#snapshot-timing-row label{margin:0}
+#historical-ack-row{padding:12px 14px;border-radius:10px;background:#fff8e7;border:1px solid #f2e2b6;line-height:1.5}
+#historical-ack-row.hidden{display:none}
+.history-note{display:block;color:#8b6c31;font-size:.69rem;margin-top:4px}
+@media(max-width:900px){.cycle-decision-grid{grid-template-columns:1fr}}
