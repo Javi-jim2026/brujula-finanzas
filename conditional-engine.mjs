@@ -8,7 +8,7 @@ import {cycleDates,cycleRule,cardPaymentTimeline} from './card-cycle.mjs';
 const ISO=/^\d{4}-\d{2}-\d{2}$/;
 const spendKinds=new Set(['purchase','expense','fee','interest']);
 const creditKinds=new Set(['purchase','fee','interest']);
-export const isHistoricalMovement=(account,date)=>Boolean(account?.opening_balance_date&&date&&date<=account.opening_balance_date);
+export const isHistoricalMovement=(account,date,postSnapshot=false)=>Boolean(account?.opening_balance_date&&date&&(date<account.opening_balance_date||(date===account.opening_balance_date&&!postSnapshot)));
 export function transactionCycle(card,date){
  if(!ISO.test(String(date||''))||card?.kind!=='credit'||!Number(card.cutoff_day))return null;
  const month=date.slice(0,7);
@@ -21,14 +21,15 @@ export function transactionCycle(card,date){
 }
 export function evaluateMovement(account,movement,today){
  const date=String(movement.transaction_date||''),kind=String(movement.kind||''),
- historical=isHistoricalMovement(account,date);
+ postSnapshot=Boolean(movement.post_baseline_same_day)&&date===account?.opening_balance_date,
+ historical=isHistoricalMovement(account,date,postSnapshot);
  if(!ISO.test(date)||date>today)return {ok:false,historical:false,
   message:!ISO.test(date)?'Selecciona una fecha válida.':'Para una compra o pago futuro utiliza un compromiso programado; Movimientos registra operaciones que ya ocurrieron.'};
  if(historical&&!spendKinds.has(kind))return {ok:false,historical:true,
   message:'Los pagos, ingresos y transferencias anteriores al saldo inicial ya están incluidos allí. No pueden registrarse como un nuevo abono. Solo se permiten gastos históricos sin afectar el saldo.'};
  const cycle=creditKinds.has(kind)?transactionCycle(account,date):null;
- const status=historical?'historical':cycle?.alreadyPastCutoff?'after-cutoff':cycle?'before-cutoff':'current';
- return {ok:true,historical,status,cycle,changesBalance:!historical,
+ const status=historical?'historical':postSnapshot?'same-day-after-snapshot':cycle?.alreadyPastCutoff?'after-cutoff':cycle?'before-cutoff':'current';
+ return {ok:true,historical,postSnapshot,status,cycle,changesBalance:!historical,
   message:historical?'Movimiento histórico: se conserva para tus reportes, pero ya está incluido en el saldo inicial. No aumenta la deuda ni reduce el crédito disponible.':
    cycle?.estimatedDue?'Compra del ciclo que corta el '+cycle.cutoff+'. Vencimiento habitual previsto: '+cycle.estimatedDue+
     (cycle.estimatedDueEnd!==cycle.estimatedDue?' a '+cycle.estimatedDueEnd:'')+
@@ -46,8 +47,8 @@ export function accountCycleDecisions(state,account,today){
  const previousClose=monthlyDate(addMonths(current.closeMonth,-1),Number(account.cutoff_day));
  const past=state.movements.filter(m=>expenseForCredit(m,account));
  const inCycle=past.filter(m=>m.transaction_date>previousClose&&m.transaction_date<=current.cutoff);
- const historical=inCycle.filter(m=>m.historical_only||isHistoricalMovement(account,m.transaction_date));
- const newSpend=inCycle.filter(m=>!m.historical_only&&!isHistoricalMovement(account,m.transaction_date));
+ const historical=inCycle.filter(m=>m.historical_only||isHistoricalMovement(account,m.transaction_date,m.post_baseline_same_day));
+ const newSpend=inCycle.filter(m=>!m.historical_only&&!isHistoricalMovement(account,m.transaction_date,m.post_baseline_same_day));
  const todayCut=today===closeThis;
  const cutPassed=today>closeThis;
  const timeline=cardPaymentTimeline(account,state.statements||[],state.movements||[],today);
