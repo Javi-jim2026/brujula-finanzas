@@ -30,7 +30,7 @@ export function availableCreditFrom(a, statements, movements, today) {
  return Math.max(0,pesos(pesos(a.credit_limit)-accountBalanceFrom(a,movements)));
 }
 export function assertMovementAfterBaseline(account, movement){
- if(account?.opening_balance_date && movement.transaction_date<=account.opening_balance_date)
+ if(account?.opening_balance_date && (movement.transaction_date<account.opening_balance_date || (movement.transaction_date===account.opening_balance_date&&!movement.post_baseline_same_day)))
   throw Error('Esta operación es anterior o igual al saldo inicial ('+account.opening_balance_date+'). Ya está incluida en la deuda inicial; no se vuelve a sumar.');
 }
 export function assertBaselineSafe(a, movements, date) {
