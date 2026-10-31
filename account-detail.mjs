@@ -1,5 +1,6 @@
 /* Brújula v1.11 · Expediente de cuenta con calendario por ciclo. */
 import {cardCycleLabel} from './cycle-ui.mjs';
+import {renderAccountCycleCondition} from './conditional-ui.mjs';
 import {cardGradientStyle} from './card-colors.mjs';
 let selectedAccountId=null,filter='all',pageNumber=0;
 const PAGE_SIZE=20;
@@ -37,7 +38,7 @@ export function renderAccountDetails(ctx){
  const cycle=credit?cardCycleLabel(ctx.state,a,ctx.dateToday()):'';
  const rows=movements.length?movements.map(m=>
    '<tr><td>'+fmt(m.transaction_date)+'</td><td><b>'+safe(m.description||m.merchant||ctx.kinds[m.kind]||'Movimiento')+'</b>'+
-   (m.statement_id?'<small class="muted"> · Vinculado al corte</small>':'')+'</td><td>'+safe(ctx.kinds[m.kind]||m.kind)+'</td>'+
+   (m.statement_id?'<small class="muted"> · Vinculado al corte</small>':'')+(m.historical_only?'<small class="history-note"> · Histórico, sin afectar saldo</small>':'')+'</td><td>'+safe(ctx.kinds[m.kind]||m.kind)+'</td>'+
    '<td><b class="'+(m.kind==='payment'||['refund','income'].includes(m.kind)?'positive':'')+'">'+mx(m.amount)+'</b></td>'+
    '<td><button class="btn-mini" data-act="edit-movement" data-id="'+safe(m.id)+'">Editar</button></td></tr>'
  ).join(''):'<tr><td colspan="5"><p class="muted">No hay movimientos de este tipo en esta cuenta.</p></td></tr>';
@@ -48,7 +49,7 @@ export function renderAccountDetails(ctx){
  '<button class="btn outline" data-act="card-color" data-id="'+safe(a.id)+'">🎨 Cambiar color</button>'+
  (credit?'<button class="btn outline" data-act="card-cycle" data-id="'+safe(a.id)+'">Configurar fechas de pago</button>':'')+'</div></div>'+
  '<div class="account-color-banner" style="'+cardGradientStyle(a)+'"><span>💳 '+safe(a.name)+'</span><span>'+(a.last4?'•••• '+safe(a.last4):'Mi cuenta')+'</span></div>'+
- summary+extra+cycle+
+ summary+extra+cycle+(credit?renderAccountCycleCondition(ctx.state,a,ctx.dateToday()):'')+
  '<section class="panel section"><div class="section-title"><h3>Movimientos de '+safe(a.name)+' · '+entries.length+' registros</h3></div>'+
  '<div class="filterbar"><label class="field">Mostrar<select id="account-detail-kind">'+
  [['all','Todos'],['charges','Compras y cargos'],['payments','Pagos a tarjeta'],['other','Abonos y otros']].map(([v,l])=>'<option value="'+v+'" '+(filter===v?'selected':'')+'>'+l+'</option>').join('')+
