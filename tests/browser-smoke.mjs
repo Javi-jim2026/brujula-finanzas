@@ -40,6 +40,14 @@ try{
  }
  await page.locator('#demo').click();
  if(await page.locator('#shell').isHidden())throw Error('Explorar demo no muestra la aplicación. '+JSON.stringify(errors));
+ const clockLabel=page.locator('#finance-clock-label');
+ if(await clockLabel.count()!==1||!await clockLabel.innerText().then(t=>t.includes('Reloj del dispositivo')||t.includes('servidor')))
+  throw Error('Reloj interno no aparece al abrir la app.');
+ const sequence=page.locator('#sequence-engine-panel');
+ if(await sequence.count()!==1)throw Error('No existe el motor de secuencias en Resumen.');
+ if(await sequence.locator('.sequence-card').count()!==2)throw Error('No se evaluaron ambas tarjetas de la demo.');
+ if(!await sequence.innerText().then(t=>t.includes('Límite')&&t.includes('Deuda estimada')&&t.includes('Disponible estimado')&&t.includes('Vencimiento')))
+  throw Error('El motor no presenta límites, deudas y cronograma.');
  const budgetPanel=page.locator('#paycheck-panel');
  if(await budgetPanel.count()!==1)throw Error('No aparece el nuevo panel de nómina quincenal.');
  if(!await budgetPanel.innerText().then(t=>t.includes('Próxima nómina')))throw Error('No aparece la próxima nómina.');
@@ -103,5 +111,5 @@ try{
  if(await page.locator('#modal-form').getAttribute('data-table')!=='statements')throw Error('Registrar estado de cuenta no abre el formulario.');
  await page.locator('#close-modal').click();
  if(errors.some(e=>/pageerror|request:/.test(e)))throw Error('Errores JavaScript: '+JSON.stringify(errors));
- console.log('BROWSER SMOKE OK: recuperar, instalar, demo, registrar, ciclos, colores y navegación');
+ console.log('BROWSER SMOKE OK: reloj, secuencias, límites, recuperar, instalar, demo, ciclos, colores y navegación');
 }finally{await browser?.close();await new Promise(r=>server.close(r))}
