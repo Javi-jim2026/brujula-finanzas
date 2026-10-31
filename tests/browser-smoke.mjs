@@ -56,6 +56,7 @@ try{
  await page.locator('#modal-form [type="submit"]').click();
  await page.waitForTimeout(100);
  if(!await page.locator('#content').innerText().then(t=>t.includes('2 de 9 mensualidades pagadas')&&t.includes('Ver pagos MSI vinculados (1)')))throw Error('Vincular MSI no actualizó el historial y contador. Vista='+JSON.stringify((await page.locator('#content').innerText()).slice(0,2300))+'; modal='+await page.locator('#modal').getAttribute('class')+'; aviso='+await page.locator('#toast').innerText()+'; errors='+JSON.stringify(errors));
+ await page.locator('#mobile-nav [data-page="dashboard"]').click();
  if(await page.locator('#condition-cycles .cycle-decision-card').count()<2)throw Error('No se muestran condiciones independientes por tarjeta en Resumen.');
  await page.locator('#quick-add').click();
  await page.locator('#modal-form [name="kind"]').selectOption('purchase');
