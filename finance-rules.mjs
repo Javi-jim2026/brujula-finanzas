@@ -8,7 +8,7 @@ export function movementDelta(m, a) {
  return ['income','refund','adjustment_plus','transfer_in'].includes(m.kind)?x:-x;
 }
 export function eligibleMovements(a, movements) {
- return movements.filter(m => m.account_id===a.id && !m.historical_only && (!a.opening_balance_date || m.transaction_date>a.opening_balance_date));
+ return movements.filter(m => m.account_id===a.id && !m.historical_only && (!a.opening_balance_date || m.transaction_date>a.opening_balance_date || (m.transaction_date===a.opening_balance_date&&m.post_baseline_same_day)));
 }
 export function accountBalanceFrom(a,movements) {
  return pesos(pesos(a.opening_balance)+eligibleMovements(a,movements).reduce((n,m)=>n+movementDelta(m,a),0));
@@ -23,7 +23,7 @@ export function availableCreditFrom(a, statements, movements, today) {
     (y.available_at||y.close_date).localeCompare(x.available_at||x.close_date))[0];
  if(snap){
    const snapDate=snap.available_at||snap.close_date;
-   const changes=movements.filter(m=>m.account_id===a.id && !m.historical_only && (m.posting_date||m.transaction_date)>snapDate)
+   const changes=movements.filter(m=>m.account_id===a.id && !m.historical_only && ((m.posting_date||m.transaction_date)>snapDate || (m.transaction_date===snapDate&&m.post_baseline_same_day)))
      .reduce((n,m)=>n+movementDelta(m,a),0);
    return Math.max(0,Math.min(pesos(a.credit_limit),pesos(pesos(snap.bank_available)-changes)));
  }
