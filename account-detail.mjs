@@ -67,7 +67,8 @@ export function renderAccountDetails(ctx){
  (credit?'<button class="btn soft" data-act="account-pay" data-id="'+safe(a.id)+'">+ Pago a tarjeta</button>':'')+
  '<button class="btn outline" data-act="edit-account" data-id="'+safe(a.id)+'">Editar cuenta</button>'+
  '<button class="btn outline" data-act="card-color" data-id="'+safe(a.id)+'">🎨 Cambiar color</button>'+
- (credit?'<button class="btn outline" data-act="card-cycle" data-id="'+safe(a.id)+'">Configurar fechas de pago</button>':'')+'</div></div>'+
+ (credit?'<button class="btn outline" data-act="card-cycle" data-id="'+safe(a.id)+'">Configurar fechas de pago</button>':'')+
+ (credit?'<button class="btn outline" data-act="period-debt" data-id="'+safe(a.id)+'">Conciliar deuda actual + MSI</button>':'')+'</div></div>'+
  '<div class="account-color-banner" style="'+cardGradientStyle(a)+'"><span>💳 '+safe(a.name)+'</span><span>'+(a.last4?'•••• '+safe(a.last4):'Mi cuenta')+'</span></div>'+
  summary+extra+(credit?renderAccountPortfolio(ctx.state,a,ctx.dateToday()):'')+cycle+(credit?renderAccountCycleCondition(ctx.state,a,ctx.dateToday()):'')+
  '<section class="panel section"><div class="section-title"><h3>Movimientos de '+safe(a.name)+' · '+entries.length+' registros</h3></div>'+
