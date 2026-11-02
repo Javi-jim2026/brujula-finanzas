@@ -34,7 +34,7 @@ export function dueEvents(state,from,to,asOf=null){
     label:b.name,account_id:b.account_id,direction:b.direction||'expense',due_key:b.id+':'+date,category:b.category});
  }
  for(const s of state.statements||[]){
-  if(s.due_date>=from&&s.due_date<=to){const total=cash(s.no_interest_amount)-cash(s.paid_before_baseline)
+  if(s.due_date>=from&&s.due_date<=to&&(!asOf||s.close_date<=asOf)){const total=cash(s.no_interest_amount)-cash(s.paid_before_baseline)
    -(state.movements||[]).filter(m=>m.statement_id===s.id&&m.kind==='payment'&&(!asOf||m.transaction_date<=asOf)).reduce((v,m)=>v+cash(m.amount),0);
    if(total>0)items.push({date:s.due_date,type:'statement',id:s.id,amount:cash(total),label:'Tarjeta · '+(state.accounts||[]).find(a=>a.id===s.account_id)?.name,account_id:s.account_id});}
  }
