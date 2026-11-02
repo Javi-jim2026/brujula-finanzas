@@ -10,7 +10,7 @@ const statuses={
 };
 export function cycleEstimateCard(c){
  const official=c.status==='official', past=c.status==='closed-unverified';
- const statusLabel=official?'Dato oficial registrado':past?'Falta conciliación del banco':'Estimación en construcción';
+ const statusLabel=official?(c.pending<=0?'Pago oficial cubierto':'Dato oficial · pago pendiente'):past?'Falta conciliación del banco':'Estimación en construcción';
  const hasAmount=c.lines.length>0;
  const dueText=c.dueDate?' · vence '+date(c.dueDate)+(c.dueEnd!==c.dueDate?' al '+date(c.dueEnd):''):'';
  return '<article class="cycle-ledger-card'+(past?' needs-check':'')+'">'+
@@ -59,8 +59,15 @@ export function renderCycleLedger(state,asOf,{compact=false}={}){
 export function cycleLedgerAttention(state,asOf){
  const rows=cycleReconciliationSummary(state,asOf);
  if(!rows.length)return '';
- return '<section class="panel section"><h3>📌 Cortes que necesitan seguimiento</h3><p class="muted small">'+
- rows.length+' ciclo(s) con pago oficial pendiente o corte estimado sin conciliar. Los cálculos nunca registran un pago automáticamente.</p>'+
- '<div class="cycle-ledger-attention">'+rows.map(r=>'<div><b>'+safe(r.accountName)+'</b>'+
- '<span>Corte '+date(r.closeDate)+' · '+(r.status==='official'?'Pendiente oficial '+money(r.pending):'Calculado '+money(r.projectedTotal)+' · verificar con banco')+'</span></div>').join('')+'</div></section>';
+ const makeRow=r=>'<div><b>'+safe(r.accountName)+'</b>'+
+ '<span>Corte '+date(r.closeDate)+' · '+
+ (r.status==='official'?'Pendiente oficial '+money(r.pending):
+ 'Compras del corte calculadas '+money(r.projectedTotal)+' · requiere verificar con el banco')+'</span></div>';
+ const current=rows.slice(0,7),older=rows.slice(7);
+ return '<section class="panel section" id="cycle-ledger-review"><h3>📌 Cortes que necesitan seguimiento</h3>'+
+ '<p class="muted small">'+rows.length+' ciclo(s) con pago bancario pendiente o corte calculado sin conciliar. Ninguno se marca como pagado automáticamente por el paso del tiempo.</p>'+
+ '<div class="cycle-ledger-attention">'+current.map(makeRow).join('')+'</div>'+
+ (older.length?'<details class="cycle-ledger-older"><summary>Ver '+older.length+' corte(s) anteriores pendientes de revisión</summary>'+
+ '<div class="cycle-ledger-attention">'+older.map(makeRow).join('')+'</div></details>':'')+
+ '</section>';
 }
