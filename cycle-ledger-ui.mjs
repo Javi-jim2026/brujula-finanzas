@@ -20,7 +20,8 @@ export function cycleEstimateCard(c){
  (c.window.startInclusive?'Desde '+date(c.window.startInclusive):'Después del '+date(c.window.startExclusive))+
  ' · hasta '+date(c.closeDate)+'</span><small>Corte '+date(c.closeDate)+dueText+'</small></div>'+
  '<div class="cycle-ledger-totals"><div><small>Compras registradas</small><strong>'+money(c.purchaseTotal)+'</strong></div>'+
- '<div><small>MSI del corte</small><strong>'+money(c.msiTotal)+'</strong></div>'+
+ '<div><small>MSI vinculados</small><strong>'+money(c.linkedMsiTotal)+'</strong></div>'+
+ '<div><small>MSI programados sin vincular</small><strong>'+money(c.scheduledMsiTotal)+'</strong></div>'+
  '<div><small>Comisiones / intereses / ajustes</small><strong>'+money(c.extrasTotal)+'</strong></div>'+
  '<div><small>Devoluciones / bonificaciones</small><strong>−'+money(c.creditsTotal)+'</strong></div></div>'+
  '<div class="cycle-ledger-result"><span>Total calculado<small>Solo con tus registros</small></span><b>'+money(c.projectedTotal)+'</b></div>'+
@@ -52,7 +53,7 @@ export function renderCycleLedger(state,asOf,{compact=false}={}){
  }).join('');
  return '<section class="panel section cycle-ledger" id="cycle-ledger">'+
   '<div class="section-title"><div><h3>🧮 Compras acumuladas por periodo de corte</h3>'+
-  '<p class="muted small">Como tu control en Excel: sumamos compras, mensualidades MSI, cargos y bonificaciones del periodo de cada tarjeta. Se actualiza al registrar o editar movimientos.</p></div></div>'+
+  '<p class="muted small">Como tu control en Excel: sumamos compras y gastos MSI vinculados una sola vez, y distinguimos las mensualidades todavía programadas. El acumulado se actualiza al registrar o vincular.</p></div></div>'+
   '<p class="tip">El total calculado es una estimación, no reemplaza el pago para no generar intereses del estado de cuenta. Un pago al banco no es una compra nueva y no se suma dos veces.</p>'+
   '<div class="cycle-ledger-accounts">'+accounts+'</div></section>';
 }
