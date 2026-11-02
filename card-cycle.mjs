@@ -47,9 +47,10 @@ export function cardPaymentTimeline(card,statements,movements,today,{monthsBack=
  const result=[];
  for(let n=-monthsBack;n<=monthsForward;n++){
   const ym=addMonths(today.slice(0,7),n);
-  const s=byMonth.get(ym);
+  const candidate=byMonth.get(ym);
+  const s=candidate?.close_date<=today?candidate:null;
   if(s){
-   const assigned=(movements||[]).filter(m=>m.statement_id===s.id&&m.kind==='payment').reduce((v,m)=>v+Number(m.amount||0),0);
+   const assigned=(movements||[]).filter(m=>m.statement_id===s.id&&m.kind==='payment'&&m.transaction_date<=today).reduce((v,m)=>v+Number(m.amount||0),0);
    const amount=cash(Math.max(0,Number(s.no_interest_amount||0)-Number(s.paid_before_baseline||0)-assigned));
    const item={account_id:card.id,accountName:card.name,cycleMonth:ym,closeDate:s.close_date,date:s.due_date,
     latestDate:s.due_date,source:'official',amount,statementId:s.id,days:daysBetween(today,s.due_date)};
