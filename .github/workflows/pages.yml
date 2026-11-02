@@ -50,15 +50,19 @@ jobs:
           node --check cycle-estimator.mjs
           node --check cycle-ledger-ui.mjs
           node --check msi-ledger.mjs
+          node --check credit-portfolio.mjs
+          node --check credit-portfolio-ui.mjs
           node --test tests/*.test.mjs
-      - name: Probar arranque y botones en Chrome
-        run: |
-          npm install --no-save --no-audit --no-fund playwright-core@1.56.1
-          node tests/browser-smoke.mjs
       - name: Preparar únicamente archivos públicos de la aplicación
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js finance-rules.mjs planning-rules.mjs planning-ui.mjs statement-import.mjs recurring-review.mjs account-detail.mjs install-helper.mjs install-app.mjs password-recovery.mjs payday-planning.mjs payday-panel.mjs msi-payment-link.mjs card-cycle.mjs cycle-ui.mjs card-colors.mjs conditional-engine.mjs conditional-ui.mjs finance-clock.mjs sequence-engine.mjs sequence-ui.mjs cycle-estimator.mjs cycle-ledger-ui.mjs msi-ledger.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
+          cp index.html styles.css app.js finance-rules.mjs planning-rules.mjs planning-ui.mjs statement-import.mjs recurring-review.mjs account-detail.mjs install-helper.mjs install-app.mjs password-recovery.mjs payday-planning.mjs payday-panel.mjs msi-payment-link.mjs card-cycle.mjs cycle-ui.mjs card-colors.mjs conditional-engine.mjs conditional-ui.mjs finance-clock.mjs sequence-engine.mjs sequence-ui.mjs cycle-estimator.mjs cycle-ledger-ui.mjs msi-ledger.mjs credit-portfolio.mjs credit-portfolio-ui.mjs config.js manifest.webmanifest sw.js icon-192.png icon-512.png _site/
+      - name: Verificar el paquete FINAL y todos los imports
+        run: node tests/verify-publish.mjs _site
+      - name: Probar en Chrome lo que se va a publicar
+        run: |
+          npm install --no-save --no-audit --no-fund playwright-core@1.56.1
+          BRUJULA_SMOKE_ROOT=_site node tests/browser-smoke.mjs
       - name: Empaquetar sitio
         uses: actions/upload-pages-artifact@v3
         with:
