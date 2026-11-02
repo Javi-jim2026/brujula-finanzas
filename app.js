@@ -157,7 +157,8 @@ function updateMovementTable(){
   return `<tr><td>${printDate(m.transaction_date)}</td>
    <td><b>${transactionName(m)}</b>
      ${m.historical_only?'<small class="history-note"> · Histórico, sin afectar saldo</small>':''}
-     ${link?'<small class="msi-linked-payment">✓ Abono relacionado con MSI: '+safe(link)+'</small>':''}</td>
+     ${link?'<small class="msi-linked-payment">✓ Abono relacionado con MSI: '+safe(link)+'</small>':''}
+     <div class="mobile-movement-actions"><button type="button" class="table-btn" data-act="edit-movement" data-id="${m.id}">Editar</button><button type="button" class="table-btn danger" data-act="delete" data-table="movements" data-id="${m.id}">Eliminar</button></div></td>
    <td>${safe(account(m.account_id)?.name||'—')}</td><td>${safe(kinds[m.kind]||m.kind)}</td>
    <td>${safe(m.category)}</td><td><b>${money(m.amount)}</b></td>
    <td><span class="inline-flex"><button class="table-btn" data-act="edit-movement" data-id="${m.id}">Editar</button>
@@ -407,7 +408,43 @@ let query=id?sb.from(table).update(row).eq('id',id).select():sb.from(table).inse
 async function remove(table,id){if(mode==='demo'){state[table]=state[table].filter(x=>x.id!==id);return}const {error}=await sb.from(table).delete().eq('id',id);if(error)throw error;await loadData()}
 async function loadData(){const newS=fresh();for(const t of DB_TABLES){const {data,error}=await sb.from(t).select('*');if(error)throw Error(`No se pudo leer ${t}: ${error.message}`);newS[t]=data||[]}state=newS}
 async function onSubmit(e){e.preventDefault();const f=e.target,table=f.dataset.table,id=f.dataset.id||null;const btn=f.querySelector('[type=submit]:not(.hidden)');if(btn?.disabled)return;try{if(btn)btn.disabled=true;if(table==='credit_wizard')await saveCreditWizard(f);else if(table==='period_snapshot')await savePeriodDebt(f);else if(table==='recurring_review')await saveRecurringReview(featureHost(),f);else if(table==='msi_link')await saveMsiLink(featureHost(),f);else if(table==='card_cycle')await saveCycleSettings(featureHost(),f);else if(table==='card_color')await saveCardColor(featureHost(),f);else{const row=collect(f,table);if(table==='movements'){if(row.kind==='payment'&&!row.description?.trim())row.description='Pago a tarjeta';const acc=account(row.account_id);row.post_baseline_same_day=Boolean(acc?.opening_balance_date&&row.transaction_date===acc.opening_balance_date&&f.elements.snapshot_timing?.value==='after');const decision=evaluateMovement(acc,row,dateToday());if(!decision.ok)throw Error(decision.message);if(decision.historical&&!f.elements.historical_ack?.checked)throw Error('Marca la confirmación del gasto histórico.');row.historical_only=decision.historical;}validate(table,row,id);await persist(table,row,id)}modalClose();toast(table==='recurring_review'?'Recurrente confirmado y registrado una sola vez ✓':table==='msi_link'?'Mensualidad vinculada a un pago sin duplicar el saldo ✓':table==='card_cycle'?'Ciclo bancario configurado; pagos previstos actualizados ✓':table==='card_color'?'Color de tarjeta actualizado ✓':'Registro guardado correctamente ✓');render()}catch(err){toast(err.message||'Error al guardar',true)}finally{if(btn)btn.disabled=false}}
-async function deleteItem(table,id){const depends={accounts:[...state.movements,...state.statements,...state.installments].some(x=>x.account_id===id),loans:state.loan_payments.some(x=>x.loan_id===id),movements:state.installments.some(x=>x.movement_id===id)||state.msi_payment_links.some(x=>x.payment_movement_id===id),statements:state.movements.some(x=>x.statement_id===id)};if(depends[table])return toast('No se puede borrar: hay registros relacionados. Primero corrígelos o desvincúlalos.',true);if(!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.'))return;try{await remove(table,id);render();toast('Registro eliminado.')}catch(e){toast(e.message,true)}}
+async function deleteItem(table,id){
+ const m=table==='movements'?state.movements.find(x=>x.id===id):null;
+ const links=m?(state.msi_payment_links||[]).filter(x=>x.payment_movement_id===id):[];
+ const depends={
+  accounts:[...state.movements,...state.statements,...state.installments].some(x=>x.account_id===id),
+  loans:state.loan_payments.some(x=>x.loan_id===id),
+  movements:state.installments.some(x=>x.movement_id===id),
+  statements:state.movements.some(x=>x.statement_id===id)
+ };
+ if(depends[table])return toast('No se puede borrar: hay registros relacionados. Primero corrígelos o desvincúlalos.',true);
+ const linkedInfo=links.map(l=>{const p=state.installments.find(x=>x.id===l.installment_id);return (p?.description||'MSI')+' · mensualidad '+l.installment_number;}).join('\n');
+ const warning=links.length
+  ?'\n\nATENCIÓN: también se desvincularán y marcarán de nuevo como pendientes estas mensualidades:\n'+linkedInfo+'\n\nSi alguna mensualidad posterior ya fue vinculada, el sistema impedirá borrar este abono para proteger la secuencia.'
+  :'';
+ const target=m?(m.kind==='payment'?'el abono':'el movimiento')+' de '+money(m.amount)+' ('+printDate(m.transaction_date)+')':'este registro';
+ if(!confirm('¿Eliminar '+target+'? Esta acción no se puede deshacer.'+warning))return;
+ try{
+  if(table==='movements'&&mode!=='demo'){
+   const {error}=await sb.rpc('delete_movement_with_msi_links',{p_movement_id:id,p_unlink_msi:links.length>0});
+   if(error)throw error;
+   await loadData();
+  }else if(table==='movements'){
+   const groups=new Map();
+   for(const l of links){const list=groups.get(l.installment_id)||[];list.push(l.installment_number);groups.set(l.installment_id,list);}
+   for(const [planId,periods] of groups){
+    const plan=state.installments.find(x=>x.id===planId),ordered=periods.sort((a,b)=>a-b);
+    if(!plan||ordered.at(-1)!==Number(plan.installments_paid)||ordered[0]!==Number(plan.installments_paid)-ordered.length+1)
+     throw Error('Este pago está vinculado a una mensualidad anterior a otra ya pagada. Elimina primero los vínculos posteriores.');
+   }
+   for(const [planId,periods] of groups){const plan=state.installments.find(x=>x.id===planId);plan.installments_paid-=periods.length;if(plan.status==='finished'&&plan.installments_paid<plan.months)plan.status='active';}
+   state.msi_payment_links=state.msi_payment_links.filter(x=>x.payment_movement_id!==id);
+   await remove(table,id);
+  }else await remove(table,id);
+  render();
+  toast(links.length?'Abono eliminado; '+links.length+' mensualidad(es) MSI revertida(s).':'Registro eliminado correctamente.');
+ }catch(e){toast(e.message||'No se pudo eliminar el registro.',true)}
+}
 function exportCSV(){const cols=['transaction_date','account','kind','amount','category','description','merchant'];const rows=[cols,...state.movements.map(m=>[m.transaction_date,account(m.account_id)?.name||'',m.kind,num(m.amount).toFixed(2),m.category,m.description,m.merchant])];const escapeCSV=v=>'"'+String(v??'').replaceAll('"','""')+'"';let blob=new Blob(['\ufeff'+rows.map(r=>r.map(escapeCSV).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`brujula-movimientos-${dateToday()}.csv`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('CSV descargado: guárdalo de forma segura.')} 
 async function handleAction(b){if(paydayAction(b,render))return;if(accountDetailAction(b,featureHost()))return;if(await extraAction(b,featureHost()))return;if(await importClick(b,featureHost()))return;const act=b.dataset.act,id=b.dataset.id;if(act==='period-debt')return openPeriodDebt(id);if(act==='period-debt-reset')return resetPeriodDebt(id);if(act==='card-color')return openCardColors(featureHost(),id);if(act==='card-cycle')return openCycleSettings(featureHost(),id);if(act==='cycle-add-purchase')return openForm('movements',null,id,'purchase');if(act==='cycle-statement')return openForm('statements',null,id);if(act==='msi-view-ledger'){const p=state.installments.find(x=>x.id===id);if(!p)return toast('Plan MSI no encontrado.',true);page='movements';render();$('#mov-account').value=p.account_id;$('#mov-kind').value='msi_schedule';$('#mov-search').value=p.description||'';updateMovementTable();window.scrollTo({top:0,behavior:'smooth'});return}if(act==='msi-link'||act==='advance-installment')return openMsiLink(featureHost(),id);if(act==='wizard-next')return wizardGo(1);if(act==='wizard-prev')return wizardGo(-1);if(act==='close')return modalClose();if(act==='new-account')return openCreditWizard();if(act==='new-cash-account')return openForm('accounts');if(act==='new-movement')return openForm('movements');if(act==='new-installment')return openForm('installments');if(act==='new-statement')return openForm('statements');if(act==='card-statement')return openForm('statements',null,id);if(act==='new-loan')return openForm('loans');if(act==='new-loan-payment')return openForm('loan_payments',null,id);if(act==='edit-account'){const a=account(id);return a?.kind==='credit'?openCreditWizard(id):openForm('accounts',id)}if(act==='edit-movement')return openForm('movements',id);if(act==='edit-installment')return openForm('installments',id);if(act==='edit-statement')return openForm('statements',id);if(act==='edit-loan')return openForm('loans',id);if(act==='edit-loan-payment')return openForm('loan_payments',id);if(act==='delete')return deleteItem(b.dataset.table,id);if(act==='export')return exportCSV();}
 function updateClockBadge(){
