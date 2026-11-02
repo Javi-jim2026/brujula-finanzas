@@ -5,6 +5,7 @@ import {addMonths,monthlyDate,cash} from './planning-rules.mjs';
 import {cycleDates} from './card-cycle.mjs';
 import {installmentAmount} from './msi-payment-link.mjs';
 import {paymentPending} from './finance-rules.mjs';
+import {scheduledMsiEntries} from './msi-ledger.mjs';
 const asCents=n=>Math.round((Number(n)||0)*100);
 const valid=s=>/^\d{4}-\d{2}-\d{2}$/.test(String(s||''));
 const purchaseKinds=new Set(['purchase','fee','interest','adjustment_plus']);
@@ -44,7 +45,9 @@ export function estimatedCycle(state,card,closeMonth,asOf){
  const linkedMsis=new Set((state.installments||[]).filter(p=>p.account_id===card.id&&p.movement_id)
    .map(p=>String(p.movement_id)));
  const lines=[],notes=[],skipped=[];
- let purchaseC=0,feeC=0,creditC=0,msiC=0,excludedC=0;
+ let purchaseC=0,feeC=0,creditC=0,msiC=0,linkedMsiC=0,plannedMsiC=0,excludedC=0;
+ const linkedEntries=scheduledMsiEntries(state,asOf,card.id);
+ const linkedInstallments=new Set(linkedEntries.map(x=>String(x.msi_plan_id)+':'+String(x.installment_number)));
  const accountMovements=(state.movements||[]).filter(m=>m.account_id===card.id);
  for(const m of accountMovements){
   const posting=m.posting_date||m.transaction_date;
@@ -70,16 +73,29 @@ export function estimatedCycle(state,card,closeMonth,asOf){
   lines.push({id:String(m.id||'mov:'+posting+':'+lines.length),type:m.kind,
     date:posting,label:m.description||m.merchant||m.category||'Movimiento',amount:cash(value)});
  }
+ // Los gastos MSI que realmente vinculó el usuario deben entrar al acumulado
+ // del periodo según la fecha del abono. Nunca alteran otra vez la deuda global.
+ for(const linked of linkedEntries){
+  const date=linked.transaction_date;
+  if(date>window.end||(window.startInclusive?date<window.startInclusive:date<=window.startExclusive))continue;
+  const value=asCents(linked.amount);
+  linkedMsiC+=value;msiC+=value;
+  lines.push({id:linked.id,type:'msi_linked',date,
+    label:linked.description,amount:cash(value)});
+ }
+ // MSI futuros/no vinculados: previsiones del plan para estimar el próximo corte.
+ // Si esa mensualidad ya tiene vínculo, no se contabiliza una segunda vez.
  for(const plan of state.installments||[]){
   if(plan.account_id!==card.id||plan.status==='cancelled')continue;
   const idx=monthIndex(plan.first_charge_month,closeMonth);
   if(idx<0||idx>=Number(plan.months))continue;
-  const money=installmentAmount(plan,idx),value=asCents(money);
+  if(linkedInstallments.has(String(plan.id)+':'+String(idx+1)))continue;
+  const amount=installmentAmount(plan,idx),value=asCents(amount);
   if(value<=0)continue;
-  // An MSI installment is a scheduled charge, not a second balance movement.
-  msiC+=value;
+  plannedMsiC+=value;msiC+=value;
   lines.push({id:'msi:'+plan.id+':'+idx,type:'msi',date:window.end,
-    label:(plan.description||'MSI')+' · mensualidad '+(idx+1)+' de '+plan.months,amount:cash(value)});
+    label:(plan.description||'MSI')+' · mensualidad programada '+(idx+1)+' de '+plan.months,
+    amount:cash(value)});
  }
  const total=cash((purchaseC+feeC+msiC-creditC)/100);
  const opening=card.opening_balance_date;
@@ -103,6 +119,7 @@ export function estimatedCycle(state,card,closeMonth,asOf){
    officialAmount,linkedPaid,paidBeforeBaseline:Number(official?.paid_before_baseline||0),
    pending,difference:diff,projectedTotal:total,partial,finished:ended,
    purchaseTotal:cash(purchaseC/100),extrasTotal:cash(feeC/100),
+   linkedMsiTotal:cash(linkedMsiC/100),scheduledMsiTotal:cash(plannedMsiC/100),
    creditsTotal:cash(creditC/100),msiTotal:cash(msiC/100),
    excludedFromBaseline:cash(excludedC/100),lines,skipped,notes};
 }
