@@ -13,8 +13,8 @@ export function eligibleMovements(a, movements, asOf=null) {
 export function accountBalanceFrom(a,movements,asOf=null) {
  return pesos(pesos(a.opening_balance)+eligibleMovements(a,movements,asOf).reduce((n,m)=>n+movementDelta(m,a),0));
 }
-export function paymentPending(s,movements) {
- const assigned=movements.filter(m=>m.statement_id===s.id&&m.kind==='payment').reduce((n,m)=>n+pesos(m.amount),0);
+export function paymentPending(s,movements,asOf=null) {
+ const assigned=movements.filter(m=>m.statement_id===s.id&&m.kind==='payment'&&(!asOf||m.transaction_date<=asOf)).reduce((n,m)=>n+pesos(m.amount),0);
  return Math.max(0,pesos(pesos(s.no_interest_amount)-pesos(s.paid_before_baseline)-assigned));
 }
 export function availableCreditFrom(a, statements, movements, today) {
