@@ -17,7 +17,8 @@ export function conditionCard(d){
  return '<div class="cycle-decision-card '+tag+'">'+
  '<div class="cycle-decision-header"><strong>💳 '+esc(d.accountName)+'</strong><span>'+esc(state)+'</span></div>'+
  '<div class="cycle-decision-line"><span>Ciclo actual: corte '+date(d.currentClose)+'</span><b>'+money(d.cycleSpend)+'</b></div>'+
- '<small>'+d.purchaseCount+' compra(s) nuevas capturadas en este ciclo. No equivalen al pago oficial.</small>'+
+ '<small>'+d.purchaseCount+' gasto(s) capturados en este ciclo, incluidos MSI vinculados. No equivalen al pago oficial.</small>'+ 
+ (d.linkedMsiTotal>0?'<small>De ellos, MSI vinculados: '+money(d.linkedMsiTotal)+'. Se suman al periodo, no otra vez a la deuda global.</small>':'')+
  (d.historicalSpend>0?'<small>Gastos históricos informativos: '+money(d.historicalSpend)+' (sin impacto en saldo).</small>':'')+
  '<div class="cycle-decision-due">'+pay+'</div>'+closeRemark+
  '<div class="inline-actions"><button class="btn-mini" data-act="view-account" data-id="'+esc(d.accountId)+'">Ver tarjeta</button>'+
