@@ -54,6 +54,8 @@ test('Un corte ingresado con fecha futura aún no se considera estado de cuenta 
  assert.equal(current.find(e=>e.cycleMonth==='2026-11').amount,null);
  assert.equal(sequenceForCard(card,data,'2026-11-01').expected,null);
  assert.equal(sequenceForCard(card,data,'2026-11-12').expected,3100);
+ assert.equal(paymentPlan(data,'2026-11-01','2026-12-04',{today:'2026-11-01'}).required,0);
+ assert.equal(paymentPlan(data,'2026-11-12','2026-12-04',{today:'2026-11-12'}).required,3100);
 });
 test('Comportamiento a primer día de noviembre: Stori 4, Plata 5–6 sin inventar importes',()=>{
  const today='2026-11-01';
