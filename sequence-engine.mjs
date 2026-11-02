@@ -4,6 +4,7 @@ import {addMonths,monthlyDate,cash} from './planning-rules.mjs';
 import {cycleDates} from './card-cycle.mjs';
 import {accountBalanceFrom,availableCreditFrom,paymentPending} from './finance-rules.mjs';
 import {transactionCycle} from './conditional-engine.mjs';
+import {creditPortfolio,msiPortfolioPilot} from './credit-portfolio.mjs';
 const chargeKinds=new Set(['purchase','fee','interest']);
 const isReal=s=>/^\d{4}-\d{2}-\d{2}$/.test(String(s||''));
 export function sequenceForCard(card,state,asOf,{back=2,ahead=3}={}){
@@ -11,8 +12,8 @@ export function sequenceForCard(card,state,asOf,{back=2,ahead=3}={}){
  const movements=(state.movements||[]).filter(m=>m.account_id===card.id);
  const statements=(state.statements||[]).filter(s=>s.account_id===card.id);
  const limit=cash(Math.max(0,Number(card.credit_limit)||0));
- const debt=cash(accountBalanceFrom(card,movements,asOf));
- const available=cash(availableCreditFrom(card,statements,movements,asOf));
+ const debt=cash(msiPortfolioPilot(card)?creditPortfolio(card,state,asOf).debt:accountBalanceFrom(card,movements,asOf));
+ const available=cash(msiPortfolioPilot(card)?creditPortfolio(card,state,asOf).available:availableCreditFrom(card,statements,movements,asOf));
  const headroom=Math.max(0,available);
  const utilization=limit>0?Math.round(1000*Math.max(debt,0)/limit)/10:null;
  const limitState=limit<=0?'needs-limit':debt>limit?'over-limit':headroom<=0?'exhausted':headroom/limit<=0.1?'low':'available';
