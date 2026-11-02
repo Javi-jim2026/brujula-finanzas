@@ -10,7 +10,7 @@ function rows(p){
   item('Compras normales registradas',p.purchases)+
   (p.otherCharges?item('Otros cargos',p.otherCharges):'')+
   (p.snapshot?(p.ordinaryPayments?item('Abonos posteriores al saldo de referencia',p.ordinaryPayments,true):'')+
-   (p.excludedPriorPayment?item('Abonos anteriores ya conciliados (solo historial)',p.excludedPriorPayment):''):
+   '':
    item('Abonos sin asignar a MSI',p.ordinaryPayments,true))+
   (p.refunds?item('Bonificaciones',p.refunds,true):'')+
   item('Deuda estimada que compromete el límite',p.debt)+
