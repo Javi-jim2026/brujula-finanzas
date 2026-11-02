@@ -125,8 +125,12 @@ try{
  if(!await page.locator('#cycle-agenda').innerText().then(t=>t.includes('Importe por confirmar')))throw Error('No hay previsiones al configurar el ciclo bancario.');
  const ledger=page.locator('#cycle-ledger');
  if(await ledger.count()!==1)throw Error('No aparece la calculadora de compras por corte en Pagos.');
- if(!await ledger.innerText().then(t=>t.includes('Compras acumuladas por periodo de corte')&&t.includes('Total calculado')&&t.includes('MSI del corte')))
+ if(!await ledger.innerText().then(t=>t.includes('Compras acumuladas por periodo de corte')&&t.includes('Total calculado')&&t.includes('MSI vinculados')))
   throw Error('Falta desglose automático de compras, MSI y total calculado.');
+ const linkedCard=ledger.locator('.cycle-ledger-card').filter({hasText:'Gasto MSI · Compra electrodoméstico'}).first();
+ if(await linkedCard.count()!==1)throw Error('Gasto MSI vinculado no aparece dentro del periodo calculado.');
+ const linkedRow=linkedCard.locator('.cycle-ledger-totals>div').filter({hasText:'MSI vinculados'});
+ if(!await linkedRow.innerText().then(t=>/\\$[1-9][\\d,.]*/.test(t)))throw Error('El MSI vinculado aparece pero NO se suma al importe del periodo.');
  await ledger.locator('[data-act="cycle-add-purchase"]').first().click();
  if(await page.locator('#modal-form').getAttribute('data-table')!=='movements')throw Error('Registrar compra por corte no abrió el formulario de gastos.');
  if(await page.locator('#modal-form [name="account_id"]').inputValue()!=='demo-cc1')throw Error('Registrar compra no preselecciona la tarjeta.');
