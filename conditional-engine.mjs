@@ -5,6 +5,7 @@
  */
 import {addMonths,monthlyDate,cash} from './planning-rules.mjs';
 import {cycleDates,cycleRule,cardPaymentTimeline} from './card-cycle.mjs';
+import {scheduledMsiEntries} from './msi-ledger.mjs';
 const ISO=/^\d{4}-\d{2}-\d{2}$/;
 const spendKinds=new Set(['purchase','expense','fee','interest']);
 const creditKinds=new Set(['purchase','fee','interest']);
@@ -49,6 +50,7 @@ export function accountCycleDecisions(state,account,today){
  const inCycle=past.filter(m=>m.transaction_date>previousClose&&m.transaction_date<=current.cutoff);
  const historical=inCycle.filter(m=>m.historical_only||isHistoricalMovement(account,m.transaction_date,m.post_baseline_same_day));
  const newSpend=inCycle.filter(m=>!m.historical_only&&!isHistoricalMovement(account,m.transaction_date,m.post_baseline_same_day));
+ const linkedMsi=scheduledMsiEntries(state,today,account.id).filter(m=>m.transaction_date>previousClose&&m.transaction_date<=current.cutoff);
  const todayCut=today===closeThis;
  const cutPassed=today>closeThis;
  const timeline=cardPaymentTimeline(account,state.statements||[],state.movements||[],today);
@@ -62,7 +64,8 @@ export function accountCycleDecisions(state,account,today){
  return {configured:true,accountId:account.id,accountName:account.name,currentClose:current.cutoff,
   previousClose,cutoffToday:todayCut,cutoffPassed:cutPassed,
   cycleLabel:todayCut?'El corte habitual es hoy':cutPassed?'Corte habitual del mes ya pasó':'Aún dentro del periodo previo al corte',
-  purchaseCount:newSpend.length,cycleSpend:cash(newSpend.reduce((n,m)=>n+Number(m.amount),0)),
+  purchaseCount:newSpend.length+linkedMsi.length,cycleSpend:cash(newSpend.reduce((n,m)=>n+Number(m.amount),0)+linkedMsi.reduce((n,m)=>n+Number(m.amount),0)),
+  linkedMsiTotal:cash(linkedMsi.reduce((n,m)=>n+Number(m.amount),0)),
   historicalSpend:cash(historical.reduce((n,m)=>n+Number(m.amount),0)),
   payment:actual,cutRecorded:recordedCut,closeThisMonth:closeThis,
   cycleRuleComplete:Boolean(cycleRule(account))};
