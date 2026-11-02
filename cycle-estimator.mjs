@@ -112,7 +112,45 @@ export function cycleEstimates(state,asOf,{back=2,ahead=2}={}){
   .sort((a,b)=>a.closeDate.localeCompare(b.closeDate)||a.accountName.localeCompare(b.accountName));
 }
 export function cycleReconciliationSummary(state,asOf){
- const items=cycleEstimates(state,asOf,{back:1,ahead:1});
- return items.filter(x=>x.status==='closed-unverified'&&(x.lines.length||x.skipped.length)||
-   x.status==='official'&&x.pending>0);
+ // Build review history from recorded cycles rather than a sliding two-month window:
+ // a past estimate is never silently treated as paid merely because the calendar advanced.
+ const all=[];
+ for(const card of (state.accounts||[]).filter(a=>a.kind==='credit'&&a.active!==false)){
+  const months=new Set();
+  for(const statement of state.statements||[])
+   if(statement.account_id===card.id&&statement.close_date<=asOf)months.add(statement.close_date.slice(0,7));
+  for(const m of state.movements||[]){
+   if(m.account_id!==card.id||!m.transaction_date||m.transaction_date>asOf)continue;
+   if(!purchaseKinds.has(m.kind)&&!creditKinds.has(m.kind))continue;
+   const d=m.posting_date||m.transaction_date,month=d.slice(0,7);
+   if(!/^[0-9]{4}-[0-9]{2}$/.test(month))continue;
+   const close=monthlyDate(month,Number(card.cutoff_day)||1);
+   months.add(d>close?addMonths(month,1):month);
+  }
+  for(const plan of state.installments||[]){
+   if(plan.account_id!==card.id||plan.status==='cancelled')continue;
+   const first=String(plan.first_charge_month||'').slice(0,7);
+   if(!/^[0-9]{4}-[0-9]{2}$/.test(first))continue;
+   for(let i=0;i<Math.min(120,Number(plan.months)||0);i++){
+    const month=addMonths(first,i);
+    if(month>asOf.slice(0,7))break;
+    months.add(month);
+   }
+  }
+  for(const month of months){
+   const x=estimatedCycle(state,card,month,asOf);
+   if(!x)continue;
+   if(x.status==='official'){if(x.pending>0)all.push(x);continue}
+   if(x.status!=='closed-unverified'||!x.lines.length)continue;
+   // MSI plans previously marked paid are historical control, not a new reminder.
+   const potentiallyUnpaid=x.lines.some(line=>{
+    if(line.type!=='msi')return true;
+    const [,id,indexText]=line.id.split(':');
+    const plan=(state.installments||[]).find(p=>String(p.id)===id);
+    return !plan||Number(indexText)>=(Number(plan.installments_paid)||0);
+   });
+   if(potentiallyUnpaid)all.push(x);
+  }
+ }
+ return all.sort((a,b)=>b.closeDate.localeCompare(a.closeDate)||a.accountName.localeCompare(b.accountName));
 }
