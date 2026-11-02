@@ -67,7 +67,7 @@ try{
  await page.locator('[data-act="msi-view-ledger"]').first().click();
  if(await page.locator('#mov-kind').inputValue()!=='msi_schedule')throw Error('El botón Ver cargos en Registro no seleccionó MSI.');
  if(await page.locator('#mov-account').inputValue()!=='demo-cc1')throw Error('Ver cargos MSI no filtró por la tarjeta del plan.');
- if(!await page.locator('#mov-list .msi-ledger-row').first().innerText().then(t=>t.includes('Compra electrodoméstico')&&t.includes('informativo')))
+ if(!await page.locator('#mov-list .msi-ledger-row').first().innerText().then(t=>t.includes('Compra electrodoméstico')&&t.toLowerCase().includes('informativo')))
    throw Error('No se muestran las mensualidades MSI previstas en Registro.');
  await page.locator('#mov-kind').selectOption('');
  if(!await page.locator('#mov-list .msi-linked-payment').first().innerText().then(t=>t.includes('Compra electrodoméstico')&&t.includes('mensualidad 2 de 9')))
