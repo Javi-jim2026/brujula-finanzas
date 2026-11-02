@@ -27,7 +27,8 @@ export function sequenceForCard(card,state,asOf,{back=2,ahead=3}={}){
  const baseMonth=asOf.slice(0,7);
  for(let i=-back;i<=ahead;i++){
   const month=addMonths(baseMonth,i);
-  const bank=index.get(month);
+  const candidate=index.get(month);
+  const bank=candidate?.close_date<=asOf?candidate:null;
   const estimate=cycleDates(card,month);
   const cutoff=bank?.close_date||estimate?.cutoff;
   if(cutoff){
