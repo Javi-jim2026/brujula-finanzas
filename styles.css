@@ -330,3 +330,7 @@
 .msi-ledger-note{display:block;font-size:.72rem;color:#514aa0;margin-top:5px;line-height:1.45}
 .msi-linked-payment{display:block;font-size:.73rem;color:#18704b;margin-top:5px;line-height:1.5}
 .msi-ledger-row .table-btn,.msi-ledger-row .btn-mini{border-color:#d8d3f6;background:#efedff;color:#514aa0}
+
+/* Acciones de movimientos accesibles sin desplazamiento horizontal en celulares. */
+.mobile-movement-actions{display:none}
+@media(max-width:760px){.mobile-movement-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.mobile-movement-actions .btn-mini,.mobile-movement-actions .table-btn{min-height:38px;padding:8px 12px;border-radius:9px}}
