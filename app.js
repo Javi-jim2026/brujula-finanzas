@@ -197,6 +197,7 @@ function openCreditWizard(id=null){
  +choose('opening_balance_mode','¿Desde cuándo iniciarás el control?',optionModes,defaultMode,true)
  +field('opening_balance_date','Fecha del saldo inicial (último corte o saldo actual)','date',a?.opening_balance_date||dateToday(),'required',true)
  +field('opening_balance','Deuda TOTAL en esa fecha (incluye MSI anteriores)','number',a?.opening_balance??'','min="0" step="0.01" required',true)
+ +(existing?'<div class="notice warn full-span"><b>Saldo inicial guardado: '+money(Number(a.opening_balance)||0)+'</b>. Este dato es la deuda TOTAL que tenías en la fecha de inicio. No es el disponible actual ni el pago del mes. Cambiarlo recalcula toda la deuda y el crédito disponible.</div><label class="wizard-check full-span"><input type="checkbox" name="confirm_baseline_change"> Confirmo que deseo sustituir la deuda inicial histórica de esta tarjeta. Comprendo que recalculará los saldos.</label>':'')
  +'<div class="notice warn full-span">⚠️ Solo registra movimientos POSTERIORES a esta fecha. No vuelvas a cargar compras ya incluidas en la deuda inicial. Los planes MSI históricos se registran solo para controlar sus mensualidades.</div>'
  +(existing?'<p class="tip full-span">Tarjeta ya registrada: los datos y movimientos existentes se conservan. Si cambias la fecha y hay movimientos anteriores, el sistema impedirá guardar para evitar duplicaciones.</p>':'')
  +'</section>';
@@ -244,6 +245,10 @@ function wizardGo(delta){
   for(const inp of sec.querySelectorAll('input,select')) if(!inp.disabled && !inp.checkValidity()){inp.reportValidity();return;}
   if(step===1){
     const mode=f.elements.opening_balance_mode.value,date=f.elements.opening_balance_date.value;
+    const debtInput=f.elements.opening_balance.value.trim();
+    if(debtInput===''||!Number.isFinite(Number(debtInput)))return toast('La deuda inicial no puede quedar vacía. Cancelar no modifica el saldo.',true);
+    const previous=f.dataset.id?account(f.dataset.id):null;
+    if(previous&&Math.round(Number(debtInput)*100)!==Math.round(Number(previous.opening_balance)*100)&&!f.elements.confirm_baseline_change?.checked)return toast('Modificar la deuda inicial cambiará todos los saldos. Marca la confirmación explícita o pulsa Cancelar.',true);
     if(mode!=='legacy'&&date>dateToday())return toast('No puedes iniciar desde una fecha futura.',true);
     const id=f.dataset.id,a=account(id);
     if(a&&date!==a.opening_balance_date){try{assertBaselineSafe(a,state.movements,mode==='legacy'?null:date)}catch(e){return toast(e.message,true)}}
@@ -256,10 +261,16 @@ async function saveCreditWizard(f){
  const fd=new FormData(f),id=f.dataset.id||null;
  const raw=name=>String(fd.get(name)||'').trim();
  const mode=raw('opening_balance_mode'),start=mode==='legacy'?null:raw('opening_balance_date');
+ const openingInput=f.elements.opening_balance.value.trim();
+ if(openingInput==='')throw Error('La deuda inicial está vacía: no se modificó la tarjeta. Para conciliar disponible utiliza el registro del banco, no borres este saldo.');
+ const previousCard=id?account(id):null;
+ const changedBaseline=Boolean(previousCard&&Math.round(Number(openingInput)*100)!==Math.round(Number(previousCard.opening_balance)*100));
+ if(changedBaseline&&!f.elements.confirm_baseline_change?.checked)throw Error('Confirma expresamente que deseas recalcular la deuda y el crédito disponible al cambiar el saldo inicial.');
  const card={...(id?{id}:{}),name:raw('name'),bank_name:raw('bank_name'),last4:raw('last4'),
   credit_limit:raw('credit_limit'),opening_balance:raw('opening_balance'),opening_balance_date:start,
   opening_balance_mode:mode,cutoff_day:raw('cutoff_day'),due_day:raw('due_day'),
-  cutoff_tolerance_days:raw('cutoff_tolerance_days'),payment_alert_days:raw('payment_alert_days')};
+  cutoff_tolerance_days:raw('cutoff_tolerance_days'),payment_alert_days:raw('payment_alert_days'),
+  confirm_baseline_change:changedBaseline&&Boolean(f.elements.confirm_baseline_change?.checked)};
  if(!card.name||!Number.isFinite(Number(card.credit_limit))||Number(card.credit_limit)<0||!Number.isFinite(Number(card.opening_balance))||Number(card.opening_balance)<0)
    throw Error('Revisa los datos, el límite y la deuda inicial.');
  if(mode!=='legacy'&&(!start||start>dateToday()))throw Error('Indica una fecha válida para el saldo inicial.');
