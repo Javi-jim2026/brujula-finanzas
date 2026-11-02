@@ -37,8 +37,8 @@ test('Registrar un pago MSI incrementa mensualidades pagadas, reduciendo capital
  s.movements.push({id:'payment2',account_id:'mercado',transaction_date:'2026-11-02',kind:'payment',amount:479.08});
  s.msi_payment_links.push({installment_id:'watch',installment_number:7,payment_movement_id:'payment2',allocated_amount:479.08});
  const after=creditPortfolio(card,s,'2026-11-02');
- assert.equal(before.debt-after.debt,479.08);
- assert.equal(after.msiLinkedPaid-before.msiLinkedPaid,479.08);
+ assert.equal(Math.round((before.debt-after.debt)*100),47908);
+ assert.equal(Math.round((after.msiLinkedPaid-before.msiLinkedPaid)*100),47908);
  assert.equal(after.ordinaryPayments,before.ordinaryPayments);
 });
 test('Una compra MSI nueva enlazada no se vuelve a sumar al capital pendiente',()=>{
