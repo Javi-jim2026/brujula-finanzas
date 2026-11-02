@@ -169,6 +169,31 @@ try{
  await page.locator('[data-act="new-statement"]').click();
  if(await page.locator('#modal-form').getAttribute('data-table')!=='statements')throw Error('Registrar estado de cuenta no abre el formulario.');
  await page.locator('#close-modal').click();
- if(errors.some(e=>/pageerror|request:/.test(e)))throw Error('Errores JavaScript: '+JSON.stringify(errors));
+ // Conciliación de cualquier tarjeta: el saldo actual declarado es independiente de pagos anteriores.
+ await page.locator('#mobile-nav [data-page="accounts"]').click();
+ const snapshotButton=page.locator('.account-cards [data-act="period-debt"]').first();
+ if(await snapshotButton.count()!==1)throw Error('No existe Ajustar deuda actual + MSI en tarjeta.');
+ await snapshotButton.click();
+ if(await page.locator('#modal-form').getAttribute('data-table')!=='period_snapshot')
+  throw Error('La conciliación no abre el formulario correcto.');
+ await page.locator('#modal-form [name="period_debt_amount"]').fill('1881.58');
+ await page.locator('#modal-form [name="confirm_period"]').check();
+ await page.locator('#modal-form button[type="submit"]').click();
+ await page.locator('#modal').waitFor({state:'hidden',timeout:4500});
+ if(!await page.locator('.account-cards .bank-card').first().innerText().then(t=>t.includes('3,')||t.includes('4,')||t.includes('5,')))
+  throw Error('No se reflejó el saldo actual más MSI en tarjeta.');
+ // En móvil, permitir eliminar un abono con MSI y revertir solamente su última mensualidad.
+ await page.locator('#mobile-nav [data-page="movements"]').click();
+ await page.locator('#mov-account').selectOption('demo-cc1');
+ const paymentRow=page.locator('#mov-list tr').filter({hasText:'Pago a tarjeta · MSI vinculado'}).first();
+ const deleteOnMobile=paymentRow.locator('.mobile-movement-actions [data-act="delete"]');
+ if(!await deleteOnMobile.isVisible())throw Error('El botón Eliminar no es visible junto al abono en pantalla móvil.');
+ page.once('dialog',dialog=>dialog.accept());
+ await deleteOnMobile.click();
+ await page.waitForTimeout(100);
+ await page.locator('#mobile-nav [data-page="installments"]').click();
+ if(!await page.locator('#content').innerText().then(t=>t.includes('1 de 9 mensualidades pagadas')))
+  throw Error('Eliminar un abono MSI no revirtió correctamente la última mensualidad.');
+  if(errors.some(e=>/pageerror|request:/.test(e)))throw Error('Errores JavaScript: '+JSON.stringify(errors));
  console.log('BROWSER SMOKE OK: motor de compra por corte, MSI, registro, reloj, límites y navegación');
 }finally{await browser?.close();await new Promise(r=>server.close(r))}
