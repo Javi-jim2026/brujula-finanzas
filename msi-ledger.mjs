@@ -2,11 +2,7 @@
  * Un cargo MSI mostrado aquí NO se agrega a state.movements ni a la deuda.
  * Las compras originales MSI (históricas o nuevas) ya están incluidas en el
  * saldo inicial o en su movimiento de compra original. */
-import {addMonths,monthlyDate} from './planning-rules.mjs';
-import {installmentAmount} from './msi-payment-link.mjs';
 const money=n=>Math.round((Number(n)||0)*100)/100;
-export const monthLabel=month=>new Date(month+'-15T12:00:00').toLocaleDateString('es-MX',{month:'short',year:'numeric'});
-const validMonth=month=>/^\d{4}-(0[1-9]|1[0-2])$/.test(String(month||''));
 export function scheduledMsiEntries(state,asOf,accountId=null){
  // Solo generar gasto cuando el usuario haya VINCULADO esa mensualidad a un pago bancario real.
  // Nunca crear cargos por el calendario del plan ni por contador de mensualidades pagadas.
@@ -19,7 +15,7 @@ export function scheduledMsiEntries(state,asOf,accountId=null){
   if(!plan||!payment||plan.account_id!==payment.account_id)continue;
   if(accountId&&plan.account_id!==accountId)continue;
   const date=String(payment.transaction_date||'');
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||date>asOf)continue;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>asOf)continue;
   const n=Number(link.installment_number),months=Number(plan.months);
   if(!Number.isInteger(n)||n<1||n>months)continue;
   const amount=money(link.allocated_amount);
