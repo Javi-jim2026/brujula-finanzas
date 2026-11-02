@@ -73,7 +73,7 @@ test('MSI histórico 14 de 18 entra por parcialidad aunque compra original ya es
   first_charge_month:'2025-10-01',installments_paid:13,status:'active'}];
  const nov=estimatedCycle(state,stori,'2026-11','2026-11-01');
  assert.equal(nov.projectedTotal,500);
- assert.match(nov.lines[0].label,/mensualidad 14 de 18/);
+ assert.match(nov.lines[0].label,/mensualidad programada 14 de 18/);
 });
 test('Centavos de mensualidades: el último cargo absorbe ajuste redondeado',()=>{
  const state=base();state.installments=[{id:'round',account_id:'st',original_amount:1724.72,
