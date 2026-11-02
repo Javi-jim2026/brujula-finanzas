@@ -69,7 +69,7 @@ test('Etiquetas de mes y controles instalados en app móvil sin alterar movimien
  const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
  const details=fs.readFileSync(new URL('../account-detail.mjs',import.meta.url),'utf8');
  assert.match(monthLabel('2026-11'),/nov/i);
- assert.match(app,/Cargo MSI \\(informativo\\)/);
+ assert.match(app,/Cargo MSI \(informativo\)/);
  assert.match(app,/msi-ledger-row/);
  assert.match(details,/getAccountLedgerEntries/);
  assert.match(details,/msi-linked-payment/);
