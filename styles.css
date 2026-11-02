@@ -322,3 +322,11 @@
 .cycle-ledger-older{margin-top:12px;padding:10px 12px;background:#f5f6fb;border-radius:10px;font-size:.78rem}
 .cycle-ledger-older summary{cursor:pointer;font-weight:730;color:#404f85}
 .cycle-ledger-older .cycle-ledger-attention{margin-top:12px}
+
+/* Brújula v1.15.1 · MSI informativos en Registro y expedientes de tarjetas */
+.msi-ledger-row{background:#f4f2ff}
+.msi-ledger-row td{vertical-align:middle}
+.msi-ledger-row td:first-child b{white-space:nowrap}
+.msi-ledger-note{display:block;font-size:.72rem;color:#514aa0;margin-top:5px;line-height:1.45}
+.msi-linked-payment{display:block;font-size:.73rem;color:#18704b;margin-top:5px;line-height:1.5}
+.msi-ledger-row .table-btn,.msi-ledger-row .btn-mini{border-color:#d8d3f6;background:#efedff;color:#514aa0}
