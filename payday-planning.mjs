@@ -42,7 +42,7 @@ function uniqueLatestStatements(statements){
  return new Set([...map.values()].map(s=>s.id));
 }
 export function paymentPlan(state,from,to,{today=from}={}){
- const events=dueEvents(state,from,to);
+ const events=dueEvents(state,from,to,today);
  const latestStatements=uniqueLatestStatements(state.statements||[]);
  const all=[];
  const statements=new Set();
