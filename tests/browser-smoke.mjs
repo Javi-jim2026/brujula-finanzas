@@ -96,8 +96,9 @@ try{
 
  await page.locator('#mobile-nav [data-page="statements"]').click();
  if(!await page.locator('#content').innerText().then(t=>t.includes('Cortes y conciliación')))throw Error('Pagos no abre Cortes y conciliación en móvil.');
- const cycleConfigure=page.locator('#cycle-agenda [data-act="card-cycle"]').first();
- if(await cycleConfigure.count()!==1)throw Error('La agenda no ofrece configurar el mes de vencimiento.');
+ await page.locator('#mobile-nav [data-page="accounts"]').click();
+ const cycleConfigure=page.locator('.account-cards [data-act="card-cycle"]').first();
+ if(await cycleConfigure.count()!==1)throw Error('Tarjetas no ofrece configurar el mes de vencimiento.');
  await cycleConfigure.click();
  if(await page.locator('#modal-form').getAttribute('data-table')!=='card_cycle')throw Error('No abrió configurar ciclo bancario.');
  await page.locator('#modal-form [name="cutoff_day"]').fill('12');
@@ -106,6 +107,7 @@ try{
  await page.locator('#modal-form [name="due_window_days"]').selectOption('0');
  await page.locator('#modal-form button[type="submit"]').click();
  try{await page.locator('#modal').waitFor({state:'hidden',timeout:4000})}catch{throw Error('No se guardó el calendario de tarjeta. Aviso: '+await page.locator('#toast').innerText()+'; errores='+JSON.stringify(errors))}
+ await page.locator('#mobile-nav [data-page="statements"]').click();
  if(!await page.locator('#cycle-agenda').innerText().then(t=>t.includes('Importe por confirmar')))throw Error('No hay previsiones al configurar el ciclo bancario.');
  await page.locator('[data-act="new-statement"]').click();
  if(await page.locator('#modal-form').getAttribute('data-table')!=='statements')throw Error('Registrar estado de cuenta no abre el formulario.');
