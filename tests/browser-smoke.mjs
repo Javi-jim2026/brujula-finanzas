@@ -130,7 +130,7 @@ try{
  const linkedCard=ledger.locator('.cycle-ledger-card').filter({hasText:'Gasto MSI · Compra electrodoméstico'}).first();
  if(await linkedCard.count()!==1)throw Error('Gasto MSI vinculado no aparece dentro del periodo calculado.');
  const linkedRow=linkedCard.locator('.cycle-ledger-totals>div').filter({hasText:'MSI vinculados'});
- if(!await linkedRow.innerText().then(t=>/\\$[1-9][\\d,.]*/.test(t)))throw Error('El MSI vinculado aparece pero NO se suma al importe del periodo.');
+ if(!await linkedRow.innerText().then(t=>Number(t.split('$').pop().replaceAll(',',''))>0))throw Error('El MSI vinculado aparece pero NO se suma al importe del periodo.');
  await ledger.locator('[data-act="cycle-add-purchase"]').first().click();
  if(await page.locator('#modal-form').getAttribute('data-table')!=='movements')throw Error('Registrar compra por corte no abrió el formulario de gastos.');
  if(await page.locator('#modal-form [name="account_id"]').inputValue()!=='demo-cc1')throw Error('Registrar compra no preselecciona la tarjeta.');
