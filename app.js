@@ -321,7 +321,7 @@ async function savePeriodDebt(f){
  const a=account(f.dataset.id),amountText=f.elements.period_debt_amount?.value?.trim(),date=f.elements.period_debt_date?.value;
  if(!a||a.kind!=='credit')throw Error('No se encontró la tarjeta.');
  if(amountText===''||!Number.isFinite(Number(amountText))||Number(amountText)<0)throw Error('Ingresa la deuda actual sin las mensualidades futuras.');
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)||date>dateToday())throw Error('Revisa la fecha del saldo de referencia.');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>dateToday())throw Error('Revisa la fecha del saldo de referencia.');
  if(!f.elements.confirm_period?.checked)throw Error('Confirma que no se duplican los MSI futuros.');
  await persist('accounts',{period_debt_amount:num(amountText),period_debt_date:date,period_debt_recorded_at:new Date().toISOString()},a.id);
 }
