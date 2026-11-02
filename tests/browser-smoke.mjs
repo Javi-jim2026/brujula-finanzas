@@ -123,8 +123,8 @@ try{
  await page.locator('#modal-form [name="description"]').fill('Prueba automática de acumulado por corte');
  await page.locator('#modal-form button[type="submit"]').click();
  await page.locator('#modal').waitFor({state:'hidden',timeout:4500});
- if(!await ledger.innerText().then(t=>t.includes('Prueba automática de acumulado por corte')))
-   throw Error('La compra registrada no se acumuló en el ciclo automáticamente.');
+ if(!await ledger.textContent().then(t=>t.includes('Prueba automática de acumulado por corte')))
+   throw Error('La compra registrada no se acumuló en el ciclo automáticamente. Vista: '+JSON.stringify((await ledger.textContent()).slice(0,3200)));
  await page.locator('[data-act="new-statement"]').click();
  if(await page.locator('#modal-form').getAttribute('data-table')!=='statements')throw Error('Registrar estado de cuenta no abre el formulario.');
  await page.locator('#close-modal').click();
