@@ -16,6 +16,7 @@ import {renderSequencePanel} from './sequence-ui.mjs';
 import {renderCycleLedger,cycleLedgerAttention} from './cycle-ledger-ui.mjs';
 import {ledgerEntries,msiPaymentSummary,scheduledMsiEntries} from './msi-ledger.mjs';
 import {createPasswordRecovery} from './password-recovery.mjs';
+import {msiPortfolioPilot,creditPortfolio} from './credit-portfolio.mjs';
 const $ = (s,scope=document) => scope.querySelector(s);
 const $$ = (s,scope=document) => [...scope.querySelectorAll(s)];
 const money = v => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(v)||0);
@@ -57,7 +58,7 @@ const linkedPayments=stmt=>state.movements.filter(m=>m.statement_id===stmt.id&&m
 const pendingStatement=stmt=>paymentPending(stmt,state.movements,dateToday());
 const latestStatement=id=>state.statements.filter(s=>s.account_id===id).sort((a,b)=>b.close_date.localeCompare(a.close_date))[0];
 const movementDelta=(m,a)=>deltaRule(m,a);
-const accountBalance=a=>accountBalanceFrom(a,state.movements,dateToday());
+const accountBalance=a=>msiPortfolioPilot(a)?creditPortfolio(a,state,dateToday()).debt:accountBalanceFrom(a,state.movements,dateToday());
 const accountAvailable=a=>a.kind==='credit'?num(a.credit_limit)-accountBalance(a):accountBalance(a);
 const spending=m=>['purchase','expense'].includes(m.kind);
 const personalSpend=()=>state.movements.filter(spending).reduce((s,m)=>s+num(m.amount),0);
@@ -90,7 +91,7 @@ const cycleInfo=(a,today=dateToday())=>{
  return {key:'estimated',label:'Posible nuevo periodo',description:'Confirma el corte real antes de utilizarla',next:monthDay(getMonth(currentMonth,1),day),confirmed:false,rank:2};
 };
 // El disponible informado en un corte es una fotografía histórica: proyectar movimientos posteriores.
-const shownAvailable=a=>availableCreditFrom(a,state.statements,state.movements,dateToday());
+const shownAvailable=a=>msiPortfolioPilot(a)?creditPortfolio(a,state,dateToday()).available:availableCreditFrom(a,state.statements,state.movements,dateToday());
 const cardPriority=(a,today=dateToday())=>{
  const c=cycleInfo(a,today), available=shownAvailable(a);
  if(available<1) return {...c,rank:0,label:'Sin crédito disponible',available};
