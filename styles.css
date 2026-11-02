@@ -318,3 +318,7 @@
 .cycle-ledger-attention span{font-size:.77rem;color:#6e6a62}
 @media(max-width:1000px){.cycle-ledger-card-list{grid-template-columns:1fr}}
 @media(max-width:480px){.cycle-ledger-card{padding:11px}.cycle-ledger-result{padding:10px}.cycle-ledger-result b{font-size:1rem}}
+
+.cycle-ledger-older{margin-top:12px;padding:10px 12px;background:#f5f6fb;border-radius:10px;font-size:.78rem}
+.cycle-ledger-older summary{cursor:pointer;font-weight:730;color:#404f85}
+.cycle-ledger-older .cycle-ledger-attention{margin-top:12px}
