@@ -145,7 +145,7 @@ test('Las vistas presentan total calculado separado del oficial y lista detallad
 });
 
 test('Un corte estimado de hace seis meses permanece en revisión si nunca fue conciliado',()=>{
- const state=base();
+ const state=base();state.accounts[0]={...stori,opening_balance_date:'2026-03-31'};
  state.movements=[movement('april','2026-04-21',1234.50)];
  const rows=cycleReconciliationSummary(state,'2026-11-01');
  assert.ok(rows.some(x=>x.closeMonth==='2026-05'&&x.projectedTotal===1234.5));
