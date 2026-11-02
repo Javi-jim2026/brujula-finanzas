@@ -105,8 +105,10 @@ try{
  await page.locator('#modal-form [name="due_day"]').fill('4');
  await page.locator('#modal-form [name="due_month_offset"]').selectOption('1');
  await page.locator('#modal-form [name="due_window_days"]').selectOption('0');
+ const invalid=await page.locator('#modal-form').evaluate(form=>[...form.querySelectorAll('input,select')].filter(x=>x.willValidate&&!x.checkValidity()).map(x=>({name:x.name,validity:x.validationMessage,value:x.value})));
+ if(invalid.length)throw Error('Configuración de ciclo con campos inválidos: '+JSON.stringify(invalid));
  await page.locator('#modal-form button[type="submit"]').click();
- try{await page.locator('#modal').waitFor({state:'hidden',timeout:4000})}catch{throw Error('No se guardó el calendario de tarjeta. Aviso: '+await page.locator('#toast').innerText()+'; errores='+JSON.stringify(errors))}
+ try{await page.locator('#modal').waitFor({state:'hidden',timeout:4000})}catch{throw Error('No se guardó el calendario de tarjeta. Formulario: '+JSON.stringify(await page.locator('#modal-form').evaluate(f=>({table:f.dataset.table,html:f.innerText.slice(0,700),valid:f.checkValidity()})))+' · aviso: '+await page.locator('#toast').innerText()+'; errores='+JSON.stringify(errors))}
  await page.locator('#mobile-nav [data-page="statements"]').click();
  if(!await page.locator('#cycle-agenda').innerText().then(t=>t.includes('Importe por confirmar')))throw Error('No hay previsiones al configurar el ciclo bancario.');
  const ledger=page.locator('#cycle-ledger');
