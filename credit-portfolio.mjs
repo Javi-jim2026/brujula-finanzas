@@ -6,8 +6,11 @@
  */
 import {installmentAmount} from './msi-payment-link.mjs';
 import {eligibleMovements,movementDelta,pesos} from './finance-rules.mjs';
+export function hasPeriodSnapshot(card){
+ return Boolean(card?.kind==='credit' && card.period_debt_amount !== null && card.period_debt_amount !== undefined && card.period_debt_amount !== '' && Number.isFinite(Number(card.period_debt_amount)) && /^\d{4}-\d{2}-\d{2}$/.test(String(card.period_debt_date||'')));
+}
 export function msiPortfolioPilot(card){
- return Boolean(card?.kind==='credit'&&/mercado/i.test(String(card.name||'')+' '+String(card.bank_name||'')));
+ return Boolean(card?.kind==='credit'&&(hasPeriodSnapshot(card)||/mercado/i.test(String(card.name||'')+' '+String(card.bank_name||''))));
 }
 const cents=n=>Math.round((Number(n)||0)*100);
 export function remainingPlanBalance(plan){
@@ -25,7 +28,13 @@ export function creditPortfolio(card,state,asOf){
   return {id:p.id,description:p.description||'Plan MSI',...x};
  });
  const msiPending=pesos(msiPlans.reduce((n,p)=>n+p.amount,0));
- const movements=eligibleMovements(card,state.movements||[],asOf);
+ const snapshot=hasPeriodSnapshot(card),referenceDate=card.period_debt_date;
+ // El saldo del periodo confirmado ya contiene todas las operaciones a su fecha.
+ // Solo se aplican movimientos posteriores, sin borrar el historial ni sus vínculos MSI.
+ const movements=eligibleMovements(card,state.movements||[],asOf).filter(m=>
+  !snapshot || m.transaction_date>referenceDate ||
+  (m.transaction_date===referenceDate && m.created_at && card.period_debt_recorded_at &&
+   Date.parse(m.created_at)>Date.parse(card.period_debt_recorded_at)));
  const linkAllocations=new Map();
  for(const link of state.msi_payment_links||[]){
   if(!plans.some(p=>p.id===link.installment_id))continue;
@@ -51,10 +60,14 @@ export function creditPortfolio(card,state,asOf){
    if(m.kind==='purchase')purchases+=change;else extraCharges+=change;
   }else if(change<0){refunds+=-change}
  }
- const regular=pesos((purchases+extraCharges-payments-refunds)/100);
+ const openingRegular=snapshot?cents(card.period_debt_amount):0;
+ const regular=pesos((openingRegular+purchases+extraCharges-payments-refunds)/100);
+ const excludedPriorPayment=snapshot?pesos((state.movements||[])
+  .filter(m=>m.account_id===card.id&&m.kind==='payment'&&m.transaction_date<=referenceDate)
+  .reduce((n,m)=>n+cents(m.amount),0)/100):0;
  const debt=pesos(Math.max(0,msiPending+regular));
  const limit=Math.max(0,pesos(card.credit_limit));
- return {accountId:card.id,msiPlans,msiPending,remainingInstallments:msiPlans.reduce((n,p)=>n+p.remainingMonths,0),
+ return {accountId:card.id,snapshot,referenceDate:snapshot?referenceDate:null,periodDebt:snapshot?pesos(card.period_debt_amount):null,excludedPriorPayment,msiPlans,msiPending,remainingInstallments:msiPlans.reduce((n,p)=>n+p.remainingMonths,0),
   purchases:pesos(purchases/100),otherCharges:pesos(extraCharges/100),
   ordinaryPayments:pesos(payments/100),msiLinkedPaid:pesos(msiLinkedPaid/100),
   refunds:pesos(refunds/100),originalMsiExcluded:pesos(ignoredOriginal/100),
