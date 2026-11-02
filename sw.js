@@ -1,5 +1,5 @@
-/* Brújula v1.14: cache only public UI resources; never cache Supabase responses. */
-const CACHE = 'brujula-shell-v1.14';
+/* Brújula v1.14.1: cache only public UI resources; never cache Supabase responses. */
+const CACHE = 'brujula-shell-v1.14.1';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './finance-rules.mjs', './planning-rules.mjs', './planning-ui.mjs', './statement-import.mjs', './recurring-review.mjs', './account-detail.mjs', './install-app.mjs', './install-helper.mjs', './password-recovery.mjs', './payday-planning.mjs', './payday-panel.mjs', './msi-payment-link.mjs', './card-cycle.mjs', './cycle-ui.mjs', './card-colors.mjs', './conditional-engine.mjs', './conditional-ui.mjs', './finance-clock.mjs', './sequence-engine.mjs', './sequence-ui.mjs', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
