@@ -45,7 +45,7 @@ export function accountCycleDecisions(state,account,today){
  const month=today.slice(0,7),closeThis=monthlyDate(month,Number(account.cutoff_day));
  const current=transactionCycle(account,today);
  const previousClose=monthlyDate(addMonths(current.closeMonth,-1),Number(account.cutoff_day));
- const past=state.movements.filter(m=>expenseForCredit(m,account));
+ const past=(state.movements||[]).filter(m=>expenseForCredit(m,account)&&m.transaction_date<=today);
  const inCycle=past.filter(m=>m.transaction_date>previousClose&&m.transaction_date<=current.cutoff);
  const historical=inCycle.filter(m=>m.historical_only||isHistoricalMovement(account,m.transaction_date,m.post_baseline_same_day));
  const newSpend=inCycle.filter(m=>!m.historical_only&&!isHistoricalMovement(account,m.transaction_date,m.post_baseline_same_day));
