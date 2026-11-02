@@ -144,7 +144,7 @@ function updateMovementTable(){
  if(page!=='movements')return;
  const search=($('#mov-search')?.value||'').toLowerCase(),a=$('#mov-account')?.value||'',k=$('#mov-kind')?.value||'';
  const items=ledgerEntries(state,dateToday(),a||null,k||'all').filter(m=>
-  (`${m.description||''} ${m.merchant||''} ${m.category||''}`).toLowerCase().includes(search));
+  (`${m.description||''} ${m.merchant||''} ${m.category||''} ${msiPaymentSummary(state,m)}`).toLowerCase().includes(search));
  $('#mov-list').innerHTML=items.length?items.map(m=>{
   if(m.virtual)return `<tr class="msi-ledger-row"><td><b>${printDate(m.transaction_date)}</b></td>
   <td><b>${safe(m.description)}</b><small class="msi-ledger-note">${safe(m.status)} · Sin duplicar deuda</small></td>
