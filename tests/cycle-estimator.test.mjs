@@ -143,3 +143,28 @@ test('Las vistas presentan total calculado separado del oficial y lista detallad
  assert.match(html,/data-act="cycle-add-purchase"/);
  assert.match(cycleLedgerAttention(state,'2026-11-01'),/Stori crédito/);
 });
+
+test('Un corte estimado de hace seis meses permanece en revisión si nunca fue conciliado',()=>{
+ const state=base();
+ state.movements=[movement('april','2026-04-21',1234.50)];
+ const rows=cycleReconciliationSummary(state,'2026-11-01');
+ assert.ok(rows.some(x=>x.closeMonth==='2026-05'&&x.projectedTotal===1234.5));
+ assert.match(cycleLedgerAttention(state,'2026-11-01'),/may/);
+});
+test('El historial MSI ya marcado como pagado no se confunde con deuda vencida',()=>{
+ const state=base();
+ state.installments=[{id:'old',account_id:'st',description:'MSI pasado',original_amount:9000,
+   months:18,monthly_amount:500,first_charge_month:'2025-10-01',installments_paid:13,status:'active'}];
+ const reviews=cycleReconciliationSummary(state,'2026-11-01');
+ assert.ok(!reviews.some(x=>x.closeMonth<'2026-11'&&x.accountId==='st'));
+});
+test('Un corte bancario completamente pagado muestra estado cubierto, sin alerta vencida',()=>{
+ const state=base();
+ state.statements=[{id:'stmt',account_id:'st',close_date:'2026-10-12',due_date:'2026-11-04',
+  no_interest_amount:400,paid_before_baseline:0}];
+ state.movements=[movement('pay','2026-10-30',400,'payment',{statement_id:'stmt'})];
+ const c=estimatedCycle(state,stori,'2026-10','2026-11-01');
+ assert.equal(c.pending,0);
+ assert.match(cycleEstimateCard(c),/Pago oficial cubierto/);
+ assert.ok(!cycleReconciliationSummary(state,'2026-11-01').some(x=>x.officialId==='stmt'));
+});
