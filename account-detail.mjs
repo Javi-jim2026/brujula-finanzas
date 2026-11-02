@@ -2,7 +2,7 @@
 import {cardCycleLabel} from './cycle-ui.mjs';
 import {renderAccountCycleCondition} from './conditional-ui.mjs';
 import {cardGradientStyle} from './card-colors.mjs';
-import {ledgerEntries,msiPaymentSummary,monthLabel} from './msi-ledger.mjs';
+import {ledgerEntries,msiPaymentSummary} from './msi-ledger.mjs';
 let selectedAccountId=null,filter='all',pageNumber=0;
 const PAGE_SIZE=20;
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -44,10 +44,10 @@ export function renderAccountDetails(ctx){
   '</div>':'';
  const cycle=credit?cardCycleLabel(ctx.state,a,ctx.dateToday()):'';
  const rows=movements.length?movements.map(m=>{
-  if(m.virtual)return '<tr class="msi-ledger-row"><td>'+safe(monthLabel(m.cycle_month))+
-    '<small class="muted">Mes programado</small></td><td><b>'+safe(m.description)+'</b>'+
-    '<small class="msi-ledger-note">'+safe(m.status)+' · Informativo: no modifica la deuda</small></td>'+
-    '<td>Cargo MSI previsto</td><td><b>'+mx(m.amount)+'</b></td>'+
+  if(m.virtual)return '<tr class="msi-ledger-row"><td>'+fmt(m.transaction_date)+
+    '</td><td><b>'+safe(m.description)+'</b>'+
+    '<small class="msi-ledger-note">'+safe(m.status)+' · Sin duplicar deuda</small></td>'+
+    '<td>Gasto MSI vinculado</td><td><b>'+mx(m.amount)+'</b></td>'+
     '<td><button class="btn-mini" data-page="installments">Ver MSI</button></td></tr>';
   const link=msiPaymentSummary(ctx.state,m);
   return '<tr><td>'+fmt(m.transaction_date)+'</td><td><b>'+safe(m.description||m.merchant||ctx.kinds[m.kind]||'Movimiento')+'</b>'+
@@ -68,12 +68,12 @@ export function renderAccountDetails(ctx){
  summary+extra+cycle+(credit?renderAccountCycleCondition(ctx.state,a,ctx.dateToday()):'')+
  '<section class="panel section"><div class="section-title"><h3>Movimientos de '+safe(a.name)+' · '+entries.length+' registros</h3></div>'+
  '<div class="filterbar"><label class="field">Mostrar<select id="account-detail-kind">'+
- [['all','Todos'],['charges','Compras y cargos'],['msi_schedule','Mensualidades MSI'],['payments','Pagos a tarjeta'],['other','Abonos y otros']].map(([v,l])=>'<option value="'+v+'" '+(filter===v?'selected':'')+'>'+l+'</option>').join('')+
+ [['all','Todos'],['charges','Compras y cargos'],['msi_schedule','Gastos MSI vinculados'],['payments','Pagos a tarjeta'],['other','Abonos y otros']].map(([v,l])=>'<option value="'+v+'" '+(filter===v?'selected':'')+'>'+l+'</option>').join('')+
  '</select></label></div>'+
  '<div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Importe</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
  '<div class="account-pagination"><span class="muted small">Página '+(pageNumber+1)+' de '+pages+' · '+entries.length+' movimientos de esta cuenta</span>'+
  '<div class="inline-actions"><button class="btn-mini" data-act="account-prev" '+(pageNumber===0?'disabled':'')+'>← Anteriores</button><button class="btn-mini" data-act="account-next" '+(pageNumber+1>=pages?'disabled':'')+'>Siguientes →</button></div></div>'+
- '<p class="tip">Se muestran únicamente movimientos de esta cuenta. Los pagos vinculados al estado de cuenta reducen su importe pendiente. Los cargos MSI programados son informativos; ya están considerados en la deuda original y no son nuevos cargos bancarios. Los abonos MSI aparecen identificados dentro del pago real.</p></section>';
+ '<p class="tip">Se muestran únicamente movimientos de esta cuenta. Los pagos vinculados al estado de cuenta reducen su importe pendiente. Solo aparecen gastos MSI que vinculaste realmente a un pago. No se generan mensualidades anteriores ni cargos automáticos; el importe ya forma parte de la compra original. Los abonos MSI aparecen identificados dentro del pago real.</p></section>';
 }
 export function accountDetailAction(btn,ctx){
  const act=btn.dataset.act,id=btn.dataset.id;
