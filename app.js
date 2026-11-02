@@ -51,7 +51,7 @@ const sample=()=>{
 const toast=(message,isError=false)=>{const t=$('#toast');t.textContent=message;t.style.background=isError?'#a74051':'#17243c';t.classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add('hidden'),4400)};
 const account=id=>state.accounts.find(a=>a.id===id);
 const linkedPayments=stmt=>state.movements.filter(m=>m.statement_id===stmt.id&&m.kind==='payment').reduce((s,m)=>s+num(m.amount),0);
-const pendingStatement=stmt=>paymentPending(stmt,state.movements);
+const pendingStatement=stmt=>paymentPending(stmt,state.movements,dateToday());
 const latestStatement=id=>state.statements.filter(s=>s.account_id===id).sort((a,b)=>b.close_date.localeCompare(a.close_date))[0];
 const movementDelta=(m,a)=>deltaRule(m,a);
 const accountBalance=a=>accountBalanceFrom(a,state.movements,dateToday());
