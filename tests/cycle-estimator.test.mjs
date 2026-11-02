@@ -168,3 +168,42 @@ test('Un corte bancario completamente pagado muestra estado cubierto, sin alerta
  assert.match(cycleEstimateCard(c),/Pago oficial cubierto/);
  assert.ok(!cycleReconciliationSummary(state,'2026-11-01').some(x=>x.officialId==='stmt'));
 });
+
+test('Caso real de control: MSI vinculados por $479.08 y $250 suman $729.08 a deuda del periodo, sin duplicar el abono',()=>{
+ const card={...stori,id:'mercado',name:'Mercado crédito',opening_balance_date:'2026-09-01',opening_balance:5000};
+ const state={accounts:[card],statements:[],installments:[
+  {id:'reloj',account_id:'mercado',description:'Reloj Samsung',original_amount:5749,months:12,
+   monthly_amount:479.08,first_charge_month:'2026-06-01',installments_paid:6,status:'active'},
+  {id:'otro',account_id:'mercado',description:'Otro MSI',original_amount:3000,months:12,
+   monthly_amount:250,first_charge_month:'2026-06-01',installments_paid:6,status:'active'}],
+  movements:[{id:'pago',account_id:'mercado',kind:'payment',amount:1682.53,
+   transaction_date:'2026-11-01',description:'Pago real a tarjeta'}],
+  msi_payment_links:[
+   {id:'uno',installment_id:'reloj',installment_number:6,payment_movement_id:'pago',allocated_amount:479.08},
+   {id:'dos',installment_id:'otro',installment_number:6,payment_movement_id:'pago',allocated_amount:250}]};
+ const nov=estimatedCycle(state,card,'2026-11','2026-11-02');
+ assert.equal(nov.linkedMsiTotal,729.08);
+ assert.equal(nov.scheduledMsiTotal,0);
+ assert.equal(nov.msiTotal,729.08);
+ assert.equal(nov.projectedTotal,729.08);
+ assert.equal(nov.lines.filter(x=>x.type==='msi_linked').length,2);
+ assert.equal(nov.lines.filter(x=>x.type==='msi').length,0);
+ assert.ok(!nov.lines.some(x=>x.type==='payment'));
+ const report=cycleEstimateCard(nov);
+ assert.match(report,/729\.08/);
+ assert.match(report,/MSI vinculados/);
+ assert.equal(state.movements.length,1);
+});
+test('Vincular un MSI en un mes distinto al previsto solo lo suma una vez, en el periodo del vínculo',()=>{
+ const card={...stori,opening_balance_date:'2026-09-01'};
+ const state=base();state.accounts[0]=card;
+ state.installments=[{id:'reloj',account_id:'st',description:'Reloj',
+ original_amount:1200,months:3,monthly_amount:400,first_charge_month:'2026-09-01',status:'active'}];
+ state.movements=[{id:'bank',account_id:'st',kind:'payment',amount:400,transaction_date:'2026-11-20'}];
+ state.msi_payment_links=[{id:'link',installment_id:'reloj',installment_number:2,payment_movement_id:'bank',allocated_amount:400}];
+ const october=estimatedCycle(state,card,'2026-10','2026-11-21');
+ const december=estimatedCycle(state,card,'2026-12','2026-11-21');
+ assert.equal(october.msiTotal,0);
+ assert.equal(december.linkedMsiTotal,400);
+ assert.equal(december.msiTotal,400); // número 2 ya se excluyó del mes estimado
+});
