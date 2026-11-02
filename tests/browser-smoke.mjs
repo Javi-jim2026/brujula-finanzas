@@ -109,9 +109,23 @@ try{
  try{await page.locator('#modal').waitFor({state:'hidden',timeout:4000})}catch{throw Error('No se guardó el calendario de tarjeta. Aviso: '+await page.locator('#toast').innerText()+'; errores='+JSON.stringify(errors))}
  await page.locator('#mobile-nav [data-page="statements"]').click();
  if(!await page.locator('#cycle-agenda').innerText().then(t=>t.includes('Importe por confirmar')))throw Error('No hay previsiones al configurar el ciclo bancario.');
+ const ledger=page.locator('#cycle-ledger');
+ if(await ledger.count()!==1)throw Error('No aparece la calculadora de compras por corte en Pagos.');
+ if(!await ledger.innerText().then(t=>t.includes('Compras acumuladas por periodo de corte')&&t.includes('Total calculado')&&t.includes('MSI del corte')))
+  throw Error('Falta desglose automático de compras, MSI y total calculado.');
+ await ledger.locator('[data-act="cycle-add-purchase"]').first().click();
+ if(await page.locator('#modal-form').getAttribute('data-table')!=='movements')throw Error('Registrar compra por corte no abrió el formulario de gastos.');
+ if(await page.locator('#modal-form [name="account_id"]').inputValue()!=='demo-cc1')throw Error('Registrar compra no preselecciona la tarjeta.');
+ await page.locator('#modal-form [name="kind"]').selectOption('purchase');
+ await page.locator('#modal-form [name="amount"]').fill('17.35');
+ await page.locator('#modal-form [name="description"]').fill('Prueba automática de acumulado por corte');
+ await page.locator('#modal-form button[type="submit"]').click();
+ await page.locator('#modal').waitFor({state:'hidden',timeout:4500});
+ if(!await ledger.innerText().then(t=>t.includes('Prueba automática de acumulado por corte')))
+   throw Error('La compra registrada no se acumuló en el ciclo automáticamente.');
  await page.locator('[data-act="new-statement"]').click();
  if(await page.locator('#modal-form').getAttribute('data-table')!=='statements')throw Error('Registrar estado de cuenta no abre el formulario.');
  await page.locator('#close-modal').click();
  if(errors.some(e=>/pageerror|request:/.test(e)))throw Error('Errores JavaScript: '+JSON.stringify(errors));
- console.log('BROWSER SMOKE OK: reloj, secuencias, límites, recuperar, instalar, demo, ciclos, colores y navegación');
+ console.log('BROWSER SMOKE OK: motor de compra por corte, MSI, registro, reloj, límites y navegación');
 }finally{await browser?.close();await new Promise(r=>server.close(r))}
