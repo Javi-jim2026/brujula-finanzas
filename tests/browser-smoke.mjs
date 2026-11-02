@@ -64,6 +64,14 @@ try{
  await page.locator('#modal-form [type="submit"]').click();
  await page.waitForTimeout(100);
  if(!await page.locator('#content').innerText().then(t=>t.includes('2 de 9 mensualidades pagadas')&&t.includes('Ver pagos MSI vinculados (1)')))throw Error('Vincular MSI no actualizó el historial y contador. Vista='+JSON.stringify((await page.locator('#content').innerText()).slice(0,2300))+'; modal='+await page.locator('#modal').getAttribute('class')+'; aviso='+await page.locator('#toast').innerText()+'; errors='+JSON.stringify(errors));
+ await page.locator('[data-act="msi-view-ledger"]').first().click();
+ if(await page.locator('#mov-kind').inputValue()!=='msi_schedule')throw Error('El botón Ver cargos en Registro no seleccionó MSI.');
+ if(await page.locator('#mov-account').inputValue()!=='demo-cc1')throw Error('Ver cargos MSI no filtró por la tarjeta del plan.');
+ if(!await page.locator('#mov-list .msi-ledger-row').first().innerText().then(t=>t.includes('Compra electrodoméstico')&&t.includes('informativo')))
+   throw Error('No se muestran las mensualidades MSI previstas en Registro.');
+ await page.locator('#mov-kind').selectOption('');
+ if(!await page.locator('#mov-list .msi-linked-payment').first().innerText().then(t=>t.includes('Compra electrodoméstico')&&t.includes('mensualidad 2 de 9')))
+   throw Error('No aparece el abono real asociado a MSI en Registro.');
  await page.locator('#mobile-nav [data-page="dashboard"]').click();
  if(await page.locator('#condition-cycles .cycle-decision-card').count()<2)throw Error('No se muestran condiciones independientes por tarjeta en Resumen.');
  await page.locator('#quick-add').click();
@@ -89,6 +97,9 @@ try{
  if(!await page.locator('#modal').isHidden())throw Error('No se guardó el color.');
  if(!await page.locator('.account-cards .bank-card').first().getAttribute('style').then(s=>s.includes('--card-from:#8f1e37')))throw Error('El color no persiste al cerrar la ventana.');
  await page.locator('.account-cards .bank-card [data-act="view-account"]').first().click();
+ if(await page.locator('.msi-ledger-row').count()<1)throw Error('Detalle de tarjeta no muestra cargos MSI informativos.');
+ if(!await page.locator('.msi-linked-payment').first().innerText().then(t=>t.includes('Compra electrodoméstico')))throw Error('Detalle de tarjeta no identifica el abono MSI.');
+
  if(!await page.locator('.account-color-banner').getAttribute('style').then(s=>s.includes('--card-from:#8f1e37')))throw Error('Color no aparece en expediente.');
  await page.locator('[data-act="account-back"]').click();
  await page.locator('#mobile-nav [data-page="dashboard"]').click();
