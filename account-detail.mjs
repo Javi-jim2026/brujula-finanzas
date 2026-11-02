@@ -2,7 +2,7 @@
 import {cardCycleLabel} from './cycle-ui.mjs';
 import {renderAccountCycleCondition} from './conditional-ui.mjs';
 import {cardGradientStyle} from './card-colors.mjs';
-import {ledgerEntries,msiPaymentSummary} from './msi-ledger.mjs';
+import {ledgerEntries,msiPaymentSummary,scheduledMsiEntries} from './msi-ledger.mjs';
 let selectedAccountId=null,filter='all',pageNumber=0;
 const PAGE_SIZE=20;
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -29,14 +29,16 @@ export function renderAccountDetails(ctx){
  const entries=getAccountLedgerEntries(ctx.state,a.id,filter,ctx.dateToday()),pages=Math.max(1,Math.ceil(entries.length/PAGE_SIZE));
  pageNumber=Math.max(0,Math.min(pageNumber,pages-1));
  const movements=entries.slice(pageNumber*PAGE_SIZE,(pageNumber+1)*PAGE_SIZE),all=getAccountMovements(ctx.state,a.id);
- const charges=all.filter(m=>['purchase','expense','fee','interest'].includes(m.kind)).reduce((n,m)=>n+Number(m.amount),0);
+ const postedCharges=all.filter(m=>['purchase','expense','fee','interest'].includes(m.kind));
+ const linkedMsi=scheduledMsiEntries(ctx.state,ctx.dateToday(),a.id);
+ const charges=postedCharges.reduce((n,m)=>n+Number(m.amount),0)+linkedMsi.reduce((n,m)=>n+Number(m.amount),0);
  const payments=all.filter(m=>m.kind==='payment').reduce((n,m)=>n+Number(m.amount),0);
  const stmt=(ctx.state.statements||[]).filter(s=>s.account_id===a.id).sort((x,y)=>y.close_date.localeCompare(x.close_date))[0];
  const credit=a.kind==='credit',available=credit?ctx.shownAvailable(a):ctx.accountBalance(a);
  const summary='<div class="grid stats">'+
   '<div class="panel stat"><label>'+(credit?'Deuda estimada':'Saldo estimado')+'</label><strong>'+mx(ctx.accountBalance(a))+'</strong><span class="hint">Saldo inicial + movimientos registrados</span></div>'+
   '<div class="panel stat"><label>'+(credit?'Crédito disponible estimado':'Saldo actual estimado')+'</label><strong>'+mx(available)+'</strong><span class="hint">Verifica el dato oficial en el banco</span></div>'+
-  '<div class="panel stat"><label>'+(credit?'Compras y cargos':'Gastos registrados')+'</label><strong>'+mx(charges)+'</strong><span class="hint">'+all.filter(m=>['purchase','expense','fee','interest'].includes(m.kind)).length+' movimientos de esta cuenta</span></div>'+
+  '<div class="panel stat"><label>'+(credit?'Compras y cargos':'Gastos registrados')+'</label><strong>'+mx(charges)+'</strong><span class="hint">'+(postedCharges.length+linkedMsi.length)+' gastos, incluidos MSI vinculados</span></div>'+
   '<div class="panel stat"><label>'+(credit?'Pagos a esta tarjeta':'Ingresos y abonos')+'</label><strong>'+mx(credit?payments:all.filter(m=>['income','transfer_in','refund'].includes(m.kind)).reduce((n,m)=>n+Number(m.amount),0))+'</strong><span class="hint">Solo movimientos de esta cuenta</span></div></div>';
  const extra=credit?'<div class="account-context">'+
   '<div><b>Límite:</b> '+mx(a.credit_limit)+' · <b>Inicio:</b> '+(a.opening_balance_date?fmt(a.opening_balance_date):'Fecha pendiente')+' · <b>Corte habitual:</b> '+(a.cutoff_day||'Por confirmar')+'</div>'+
