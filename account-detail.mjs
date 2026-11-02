@@ -58,9 +58,10 @@ export function renderAccountDetails(ctx){
    (m.statement_id?'<small class="muted"> · Vinculado al corte</small>':'')+
    (m.historical_only?'<small class="history-note"> · Histórico, sin afectar saldo</small>':'')+
    (link?'<small class="msi-linked-payment">✓ Abono relacionado con MSI: '+safe(link)+'</small>':'')+
+   '<div class="mobile-movement-actions"><button type="button" class="btn-mini" data-act="edit-movement" data-id="'+safe(m.id)+'">Editar</button><button type="button" class="btn-mini danger" data-act="delete" data-table="movements" data-id="'+safe(m.id)+'">Eliminar</button></div>'+
    '</td><td>'+safe(ctx.kinds[m.kind]||m.kind)+'</td>'+
    '<td><b class="'+(m.kind==='payment'||['refund','income'].includes(m.kind)?'positive':'')+'">'+mx(m.amount)+'</b></td>'+
-   '<td><button class="btn-mini" data-act="edit-movement" data-id="'+safe(m.id)+'">Editar</button></td></tr>';
+   '<td><div class="inline-actions"><button class="btn-mini" data-act="edit-movement" data-id="'+safe(m.id)+'">Editar</button><button class="btn-mini danger" data-act="delete" data-table="movements" data-id="'+safe(m.id)+'">Eliminar</button></div></td></tr>';
  }).join(''):'<tr><td colspan="5"><p class="muted">No hay movimientos de este tipo en esta cuenta.</p></td></tr>';
  return '<div class="page-head"><div><button class="linkbtn" data-act="account-back">← Mis cuentas y tarjetas</button><h1>'+safe(a.name)+'</h1><p class="muted">'+safe(a.bank_name||'')+(a.last4?' · •••• '+safe(a.last4):'')+' · '+(credit?'Tarjeta de crédito':a.kind==='debit'?'Cuenta de débito':'Efectivo')+'</p></div>'+
  '<div class="inline-actions"><button class="btn primary" data-act="account-charge" data-id="'+safe(a.id)+'">+ '+(credit?'Compra':'Gasto')+'</button>'+
