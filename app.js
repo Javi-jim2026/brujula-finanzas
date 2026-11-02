@@ -35,13 +35,14 @@ const colors=['#5b54df','#1874ad','#1d986e','#d86e5a','#9d6cd5','#26334d'];
 let mode='demo', sb=null, page='dashboard', state={}, toastTimer=null;
 const fresh=()=>Object.fromEntries(DB_TABLES.map(t=>[t,[]]));
 const sample=()=>{
- const d=fresh(), month=thisMonth();
- const c1={id:'demo-cc1',name:'Tarjeta principal',bank_name:'Banco ejemplo',kind:'credit',last4:'4242',credit_limit:60000,opening_balance:9000,cutoff_day:24,due_day:13,cutoff_tolerance_days:2,payment_alert_days:2,active:true};
- const c2={id:'demo-cc2',name:'Tarjeta de compras',bank_name:'Banco ejemplo 2',kind:'credit',last4:'1991',credit_limit:25000,opening_balance:2200,cutoff_day:14,due_day:4,cutoff_tolerance_days:2,payment_alert_days:2,active:true};
+ const d=fresh(), month=thisMonth(), day=Number(dateToday().slice(-2));
+  const lastCutMonth=cutoff=>day>=cutoff?month:getMonth(month,-1);
+ const c1={id:'demo-cc1',name:'Tarjeta principal',bank_name:'Banco ejemplo',kind:'credit',last4:'4242',credit_limit:60000,opening_balance:9000,cutoff_day:24,due_day:13,due_month_offset:1,due_window_days:0,cutoff_tolerance_days:2,payment_alert_days:2,active:true};
+ const c2={id:'demo-cc2',name:'Tarjeta de compras',bank_name:'Banco ejemplo 2',kind:'credit',last4:'1991',credit_limit:25000,opening_balance:2200,cutoff_day:14,due_day:4,due_month_offset:1,due_window_days:0,cutoff_tolerance_days:2,payment_alert_days:2,active:true};
  const debit={id:'demo-debit',name:'Cuenta de nómina',bank_name:'Banco ejemplo',kind:'debit',last4:'8844',credit_limit:0,opening_balance:14500,active:true};
  const cash={id:'demo-cash',name:'Efectivo',bank_name:'Billetera',kind:'cash',credit_limit:0,opening_balance:850,active:true};
  d.accounts=[c1,c2,debit,cash];
- d.statements=[{id:'demo-st1',account_id:c1.id,close_date:month+'-24',due_date:getMonth(month,1)+'-13',no_interest_amount:10600,bank_available:48500},{id:'demo-st2',account_id:c2.id,close_date:month+'-14',due_date:getMonth(month,1)+'-04',no_interest_amount:2300,bank_available:22500}];
+ d.statements=[{id:'demo-st1',account_id:c1.id,close_date:lastCutMonth(24)+'-24',due_date:getMonth(lastCutMonth(24),1)+'-13',no_interest_amount:10600,bank_available:48500},{id:'demo-st2',account_id:c2.id,close_date:lastCutMonth(14)+'-14',due_date:getMonth(lastCutMonth(14),1)+'-04',no_interest_amount:2300,bank_available:22500}];
  d.movements=[{id:'demo-m1',account_id:c1.id,transaction_date:month+'-08',kind:'purchase',amount:1600,category:'Supermercado',description:'Despensa'},{id:'demo-m2',account_id:c2.id,transaction_date:month+'-10',kind:'purchase',amount:300,category:'Gasolina',description:'Gasolina'},{id:'demo-m3',account_id:debit.id,transaction_date:month+'-11',kind:'expense',amount:375,category:'Alimentos',description:'Comida'},{id:'demo-m4',account_id:cash.id,transaction_date:month+'-12',kind:'expense',amount:140,category:'Transporte',description:'Taxi'},{id:'demo-m5',account_id:debit.id,transaction_date:month+'-05',kind:'income',amount:8000,category:'Ingreso',description:'Pago de nómina'}];
  d.installments=[{id:'demo-msi1',account_id:c1.id,description:'Compra electrodoméstico',original_amount:5400,months:9,first_charge_month:getMonth(month,-1)+'-01',installments_paid:1,status:'active'}];
  d.loans=[{id:'demo-loan',name:'Vehículo (ejemplo)',financed_amount:185000,monthly_payment:4700,term_months:48,next_due_date:getMonth(month,1)+'-08',payroll_deduction:true,status:'active',down_payment:40000,lender:'Financiera ejemplo'}];
