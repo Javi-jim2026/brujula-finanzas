@@ -279,3 +279,42 @@
 @media(max-width:900px){.sequence-grid{grid-template-columns:1fr}}
 @media(max-width:800px){.finance-clock-badge{max-width:170px;font-size:.62rem;padding:6px}.top-actions{gap:5px}}
 @media(max-width:450px){.finance-clock-badge{max-width:115px;white-space:normal;font-size:.59rem}.sequence-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.sequence-metrics b{font-size:.74rem}}
+
+/* Brújula v1.15 · conciliador de compras por corte, estilo Excel */
+.cycle-ledger-accounts{display:grid;gap:20px;margin-top:18px}
+.cycle-ledger-account{min-width:0}
+.cycle-ledger-account>h4{font-size:1rem;color:#30415c;margin:0 0 11px}
+.cycle-ledger-card-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.cycle-ledger-card{min-width:0;border:1px solid #dfe5f0;border-radius:14px;padding:15px;background:#fcfdff;display:grid;gap:13px}
+.cycle-ledger-card.needs-check{border-color:#e4c888;background:#fffcf3}
+.cycle-ledger-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.cycle-ledger-head b{color:#26374f;font-size:.93rem}
+.cycle-ledger-head small{display:block;margin-top:4px;font-size:.71rem;color:#75819c}
+.cycle-ledger-state{background:#edf2ff;border-radius:15px;padding:5px 9px;color:#4c60a0;font-size:.67rem;font-weight:700}
+.cycle-ledger-period{display:grid;gap:5px;font-size:.74rem;color:#4d5d77}
+.cycle-ledger-period small{color:#7c8799;font-size:.7rem}
+.cycle-ledger-totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cycle-ledger-totals>div{background:#f3f5fa;padding:9px;border-radius:8px}
+.cycle-ledger-totals small{font-size:.66rem;color:#758099;display:block;line-height:1.5}
+.cycle-ledger-totals strong{color:#253751;font-size:.92rem}
+.cycle-ledger-result{display:flex;justify-content:space-between;align-items:center;gap:8px;
+ background:#e9edff;border-radius:10px;padding:13px;color:#35468a}
+.cycle-ledger-result span{font-weight:740;font-size:.82rem}
+.cycle-ledger-result small{display:block;font-size:.65rem;font-weight:500;margin-top:4px}
+.cycle-ledger-result b{font-size:1.12rem}
+.cycle-ledger-official{display:grid;gap:7px;border:1px solid #d8e6dd;background:#f1faf3;border-radius:10px;padding:12px}
+.cycle-ledger-official>div{display:flex;gap:8px;justify-content:space-between;font-size:.78rem}
+.cycle-ledger-official b{color:#1b673b}
+.cycle-ledger-official p,.cycle-ledger-advisory,.cycle-ledger-warning{font-size:.72rem;line-height:1.5;margin:0;color:#58677e}
+.cycle-ledger-warning{padding:8px 10px;border-radius:8px;background:#fff2db;color:#76511a}
+.cycle-ledger-details{font-size:.77rem;border-top:1px solid #e1e5ef;padding-top:12px}
+.cycle-ledger-details summary{cursor:pointer;font-weight:720;color:#3b4b87}
+.cycle-ledger-line{padding:8px 0;display:flex;justify-content:space-between;gap:9px;border-bottom:1px solid #ebedf3}
+.cycle-ledger-line span{overflow-wrap:anywhere;line-height:1.5}
+.cycle-ledger-line b{white-space:nowrap;color:#243c5d}
+.cycle-ledger-actions{margin-top:2px;flex-wrap:wrap}
+.cycle-ledger-attention{display:grid;gap:8px;margin-top:10px}
+.cycle-ledger-attention>div{border-left:3px solid #d7ac4a;padding:8px 10px;background:#faf7ee;display:grid;gap:4px}
+.cycle-ledger-attention span{font-size:.77rem;color:#6e6a62}
+@media(max-width:1000px){.cycle-ledger-card-list{grid-template-columns:1fr}}
+@media(max-width:480px){.cycle-ledger-card{padding:11px}.cycle-ledger-result{padding:10px}.cycle-ledger-result b{font-size:1rem}}
