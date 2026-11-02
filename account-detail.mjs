@@ -3,6 +3,8 @@ import {cardCycleLabel} from './cycle-ui.mjs';
 import {renderAccountCycleCondition} from './conditional-ui.mjs';
 import {cardGradientStyle} from './card-colors.mjs';
 import {ledgerEntries,msiPaymentSummary,scheduledMsiEntries} from './msi-ledger.mjs';
+import {renderAccountPortfolio} from './credit-portfolio-ui.mjs';
+import {msiPortfolioPilot} from './credit-portfolio.mjs';
 let selectedAccountId=null,filter='all',pageNumber=0;
 const PAGE_SIZE=20;
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -36,7 +38,7 @@ export function renderAccountDetails(ctx){
  const stmt=(ctx.state.statements||[]).filter(s=>s.account_id===a.id).sort((x,y)=>y.close_date.localeCompare(x.close_date))[0];
  const credit=a.kind==='credit',available=credit?ctx.shownAvailable(a):ctx.accountBalance(a);
  const summary='<div class="grid stats">'+
-  '<div class="panel stat"><label>'+(credit?'Deuda estimada':'Saldo estimado')+'</label><strong>'+mx(ctx.accountBalance(a))+'</strong><span class="hint">Saldo inicial + movimientos registrados</span></div>'+
+  '<div class="panel stat"><label>'+(credit?'Deuda estimada':'Saldo estimado')+'</label><strong>'+mx(ctx.accountBalance(a))+'</strong><span class="hint">'+(msiPortfolioPilot(a)?'Incluye todo el capital MSI pendiente y compras menos abonos':'Saldo inicial + movimientos registrados')+'</span></div>'+
   '<div class="panel stat"><label>'+(credit?'Crédito disponible estimado':'Saldo actual estimado')+'</label><strong>'+mx(available)+'</strong><span class="hint">Verifica el dato oficial en el banco</span></div>'+
   '<div class="panel stat"><label>'+(credit?'Compras y cargos':'Gastos registrados')+'</label><strong>'+mx(charges)+'</strong><span class="hint">'+(postedCharges.length+linkedMsi.length)+' gastos, incluidos MSI vinculados</span></div>'+
   '<div class="panel stat"><label>'+(credit?'Pagos a esta tarjeta':'Ingresos y abonos')+'</label><strong>'+mx(credit?payments:all.filter(m=>['income','transfer_in','refund'].includes(m.kind)).reduce((n,m)=>n+Number(m.amount),0))+'</strong><span class="hint">Solo movimientos de esta cuenta</span></div></div>';
@@ -67,7 +69,7 @@ export function renderAccountDetails(ctx){
  '<button class="btn outline" data-act="card-color" data-id="'+safe(a.id)+'">🎨 Cambiar color</button>'+
  (credit?'<button class="btn outline" data-act="card-cycle" data-id="'+safe(a.id)+'">Configurar fechas de pago</button>':'')+'</div></div>'+
  '<div class="account-color-banner" style="'+cardGradientStyle(a)+'"><span>💳 '+safe(a.name)+'</span><span>'+(a.last4?'•••• '+safe(a.last4):'Mi cuenta')+'</span></div>'+
- summary+extra+cycle+(credit?renderAccountCycleCondition(ctx.state,a,ctx.dateToday()):'')+
+ summary+extra+(credit?renderAccountPortfolio(ctx.state,a,ctx.dateToday()):'')+cycle+(credit?renderAccountCycleCondition(ctx.state,a,ctx.dateToday()):'')+
  '<section class="panel section"><div class="section-title"><h3>Movimientos de '+safe(a.name)+' · '+entries.length+' registros</h3></div>'+
  '<div class="filterbar"><label class="field">Mostrar<select id="account-detail-kind">'+
  [['all','Todos'],['charges','Compras y cargos'],['msi_schedule','Gastos MSI vinculados'],['payments','Pagos a tarjeta'],['other','Abonos y otros']].map(([v,l])=>'<option value="'+v+'" '+(filter===v?'selected':'')+'>'+l+'</option>').join('')+
