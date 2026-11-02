@@ -34,15 +34,15 @@ test('Febrero y fin de mes se ajustan correctamente, sin saltarse año',()=>{
 });
 test('Corte real manda sobre pronóstico y solo sus pagos vinculados reducen deuda',()=>{
  const official={id:'close1',account_id:'stori',close_date:'2026-10-12',due_date:'2026-11-06',no_interest_amount:1100,paid_before_baseline:0};
- const paid={...data,statements:[official],movements:[{id:'p1',account_id:'stori',kind:'payment',statement_id:'close1',amount:300}]};
+ const paid={...data,statements:[official],movements:[{id:'p1',account_id:'stori',kind:'payment',statement_id:'close1',amount:300,transaction_date:'2026-10-25'}]};
  const p=cardPaymentPreview(paid,stori,today);
  assert.equal(p.source,'official');
  assert.equal(p.date,'2026-11-06');
  assert.equal(p.amount,800);
  assert.equal(p.key,'scheduled'); // Nov 6 está a ocho días del 29 de octubre
- const altered={...paid,movements:[...paid.movements,{id:'p2',account_id:'stori',kind:'payment',amount:400}]};
+ const altered={...paid,movements:[...paid.movements,{id:'p2',account_id:'stori',kind:'payment',amount:400,transaction_date:'2026-10-26'}]};
  assert.equal(cardPaymentPreview(altered,stori,today).amount,800);
- const complete={...paid,movements:[...paid.movements,{id:'p3',account_id:'stori',kind:'payment',statement_id:'close1',amount:800}]};
+ const complete={...paid,movements:[...paid.movements,{id:'p3',account_id:'stori',kind:'payment',statement_id:'close1',amount:800,transaction_date:'2026-10-27'}]};
  assert.equal(cardPaymentPreview(complete,stori,today).source,'estimated'); // following cycle, covered one is skipped in preview
 });
 test('El vencimiento oficial confirmado y sin pago sigue presente cuando está vencido',()=>{
