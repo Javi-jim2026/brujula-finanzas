@@ -27,7 +27,7 @@ export function recurringDates(b,from,to){
  }
  return results;
 }
-export function dueEvents(state,from,to){
+export function dueEvents(state,from,to,asOf=null){
  const items=[];
  for(const b of state.recurring_bills||[]){
   for(const date of recurringDates(b,from,to))items.push({date,type:'recurring',id:b.id,amount:cash(b.amount),
@@ -35,7 +35,7 @@ export function dueEvents(state,from,to){
  }
  for(const s of state.statements||[]){
   if(s.due_date>=from&&s.due_date<=to){const total=cash(s.no_interest_amount)-cash(s.paid_before_baseline)
-   -(state.movements||[]).filter(m=>m.statement_id===s.id&&m.kind==='payment').reduce((v,m)=>v+cash(m.amount),0);
+   -(state.movements||[]).filter(m=>m.statement_id===s.id&&m.kind==='payment'&&(!asOf||m.transaction_date<=asOf)).reduce((v,m)=>v+cash(m.amount),0);
    if(total>0)items.push({date:s.due_date,type:'statement',id:s.id,amount:cash(total),label:'Tarjeta · '+(state.accounts||[]).find(a=>a.id===s.account_id)?.name,account_id:s.account_id});}
  }
  for(const l of state.loans||[]){
