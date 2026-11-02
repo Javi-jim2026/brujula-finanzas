@@ -40,6 +40,31 @@ try{
  }
  await page.locator('#demo').click();
  if(await page.locator('#shell').isHidden())throw Error('Explorar demo no muestra la aplicación. '+JSON.stringify(errors));
+ // Protección real del asistente: no borrar el saldo inicial histórico ni
+ // cambiarlo sin confirmación expresa, aunque el usuario pueda editar otros datos.
+ await page.locator('#mobile-nav [data-page="accounts"]').click();
+ await page.locator('.account-cards [data-act="edit-account"]').first().click();
+ if(await page.locator('#modal-form').getAttribute('data-table')!=='credit_wizard')
+  throw Error('El editor no abre el asistente de la tarjeta.');
+ await page.locator('#wizard-next').click();
+ if(await page.locator('#modal-form').getAttribute('data-step')!=='1')
+  throw Error('No llegó a saldo inicial.');
+ const original=await page.locator('#modal-form [name="opening_balance"]').inputValue();
+ if(original!=='9000')throw Error('El editor no precargó el saldo histórico: '+original);
+ await page.locator('#modal-form [name="opening_balance"]').fill('');
+ await page.locator('#wizard-next').click();
+ if(await page.locator('#modal-form').getAttribute('data-step')!=='1')
+  throw Error('Se permitió avanzar con saldo inicial vacío.');
+ await page.locator('#modal-form [name="opening_balance"]').fill('0');
+ await page.locator('#wizard-next').click();
+ if(await page.locator('#modal-form').getAttribute('data-step')!=='1')
+  throw Error('Se permitió cambiar saldo inicial sin confirmación.');
+ await page.locator('#modal-form [name="confirm_baseline_change"]').check();
+ await page.locator('#wizard-next').click();
+ if(await page.locator('#modal-form').getAttribute('data-step')!=='2')
+  throw Error('No permite modificación confirmada del saldo.');
+ await page.locator('#close-modal').click();
+ await page.locator('#mobile-nav [data-page="dashboard"]').click();
  const clockLabel=page.locator('#finance-clock-label');
  if(await clockLabel.count()!==1||!await clockLabel.innerText().then(t=>t.includes('Reloj del dispositivo')||t.includes('servidor')))
   throw Error('Reloj interno no aparece al abrir la app.');
