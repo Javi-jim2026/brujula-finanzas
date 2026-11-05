@@ -310,26 +310,27 @@ function openPeriodDebt(id){
  const plans=state.installments.filter(p=>p.account_id===id&&p.status==='active');
  const future=num(plans.reduce((n,p)=>n+remainingMSI(p),0));
  const current=a.period_debt_amount??'';
- modalOpen('Conciliar deuda actual + MSI · '+a.name,'period_snapshot',
-  '<div class="notice full-span">💳 <b>Deuda actual</b> = compras y mensualidades ya facturadas que todavía adeudas. <b>MSI futuros</b> = capital de las mensualidades aún pendientes. No incluyas el mismo importe dos veces.</div>'+
-  field('period_debt_amount','Deuda actual según la aplicación del banco (sin MSI futuros)','number',current,'min="0" step="0.01" required',true)+
-  field('period_debt_date','Fecha de referencia del saldo','date',a.period_debt_date||dateToday(),'required')+
-  '<div class="notice full-span">MSI registrados aún pendientes: <b>'+money(future)+'</b>. Total calculado al guardar: <b>deuda actual + '+money(future)+'</b>. No se borrarán pagos ni movimientos anteriores.</div>'+
-  '<label class="check-line field full-span"><input type="checkbox" name="confirm_period" required> Confirmo que la deuda actual no incluye las mensualidades futuras mostradas arriba.</label>'+
-  (a.period_debt_amount!=null?'<button type="button" class="btn outline" data-act="period-debt-reset" data-id="'+safe(id)+'">Quitar referencia actual (volver a cálculo anterior)</button>':''),id);
+ const hasSnapshot=a.period_debt_amount!==null&&a.period_debt_amount!==undefined&&a.period_debt_date;
+ const currentPortfolio=msiPortfolioPilot(a)?creditPortfolio(a,state,dateToday()):null;
+ modalOpen('Conciliar saldo bancario · '+a.name,'period_snapshot',
+  '<div class="notice full-span">💳 Captura la <b>deuda actual que muestra el banco</b>, sin sumar las mensualidades MSI que todavía no se han cobrado. La aplicación agregará el capital MSI pendiente una sola vez para calcular tu deuda total y crédito disponible.</div>'+
+  (hasSnapshot?'<div class="notice full-span">📌 Referencia vigente: <b>'+money(currentPortfolio?.periodDebt??a.period_debt_amount)+'</b> al '+printDate(a.period_debt_date)+'. Deuda total calculada hoy: <b>'+money(currentPortfolio?.debt??0)+'</b>. Actualizarla solo cambia el cálculo desde la nueva fecha; no modifica movimientos ni pagos históricos.</div>':'')+
+  field('period_debt_amount','Deuda actual según el banco (sin MSI futuros)','number',current,'min="0" step="0.01" required',true)+
+  field('period_debt_date','Fecha en que consultaste ese saldo','date',a.period_debt_date||dateToday(),'required')+
+  '<div class="notice full-span">MSI registrados aún pendientes: <b>'+money(future)+'</b>. Al guardar, la deuda total estimada será la deuda bancaria capturada + '+money(future)+'. Comprueba que el banco no incluya ya esos cargos futuros.</div>'+
+  '<label class="check-line field full-span"><input type="checkbox" name="confirm_period" required> Confirmo que la deuda bancaria no incluye las mensualidades MSI futuras mostradas arriba.</label>'+
+  (hasSnapshot?'<label class="check-line field full-span"><input type="checkbox" name="confirm_period_replace" required> Confirmo que deseo sustituir la referencia vigente. No se borrarán ni editarán movimientos; solo se recalcularán saldos a partir de la nueva fecha.</label>':'')+
+  '<p class="tip full-span">🔒 Protección: la fecha de conciliación no puede retroceder respecto a una referencia ya guardada. Así evitamos recontar operaciones antiguas o cambiar meses ya conciliados.</p>',id);
 }
 async function savePeriodDebt(f){
  const a=account(f.dataset.id),amountText=f.elements.period_debt_amount?.value?.trim(),date=f.elements.period_debt_date?.value;
  if(!a||a.kind!=='credit')throw Error('No se encontró la tarjeta.');
  if(amountText===''||!Number.isFinite(Number(amountText))||Number(amountText)<0)throw Error('Ingresa la deuda actual sin las mensualidades futuras.');
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>dateToday())throw Error('Revisa la fecha del saldo de referencia.');
+ if(a.period_debt_date&&date<a.period_debt_date)throw Error('La nueva fecha no puede ser anterior a la conciliación vigente. Usa la misma fecha para corregir el importe o una fecha posterior para una nueva conciliación.');
  if(!f.elements.confirm_period?.checked)throw Error('Confirma que no se duplican los MSI futuros.');
+ if(a.period_debt_amount!==null&&a.period_debt_amount!==undefined&&!f.elements.confirm_period_replace?.checked)throw Error('Confirma expresamente que deseas actualizar la conciliación vigente.');
  await persist('accounts',{period_debt_amount:num(amountText),period_debt_date:date,period_debt_recorded_at:new Date().toISOString()},a.id);
-}
-async function resetPeriodDebt(id){
- const a=account(id);if(!a||a.kind!=='credit')return;
- if(!confirm('¿Quitar la deuda actual de referencia de '+a.name+'? Volverá el cálculo previo y los abonos históricos podrían descontarse. No se borrarán movimientos.'))return;
- try{await persist('accounts',{period_debt_amount:null,period_debt_date:null,period_debt_recorded_at:null},id);modalClose();render();toast('Referencia eliminada: cálculo anterior restaurado.')}catch(e){toast(e.message,true)}
 }
 function updateMovementForm(){
  const form=$('#modal-form');if(form.dataset.table!=='movements')return;
