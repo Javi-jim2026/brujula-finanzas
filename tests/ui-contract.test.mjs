@@ -35,3 +35,10 @@ test('El controlador principal mantiene navegación para todos los módulos',()=
  assert.ok(mobile.includes('data-page="statements"'),'Pagos debe estar en el menú móvil');
  assert.ok(mobile.indexOf('data-page="statements"')<mobile.indexOf('data-page="movements"'),'Pagos debe ser accesible al inicio del menú');
 });
+
+test('La conciliación de tarjetas exige confirmar cambios y protege fechas ya conciliadas',()=>{
+ const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
+ assert.ok(app.includes('confirm_period_replace'),'Actualizar una conciliación existente requiere confirmación explícita');
+ assert.ok(app.includes('date<a.period_debt_date'),'No permite retroceder la fecha de referencia');
+ assert.ok(app.includes('No se borrarán ni editarán movimientos'),'Aclara que el historial no se modifica');
+});
